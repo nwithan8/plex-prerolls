@@ -3,23 +3,17 @@
 A helper script to automate management of Plex pre-rolls.
 Define when you want different pre-rolls to play throughout the year.
 
-Ideas include:
-- Holiday pre-roll rotations
-- Special occasions
-- Summer/Winter rotations
-- Breaking up the monoteny
-- Keeping your family/friends on their toes!
-
 Set it and forget it!
 
 Optional Arguments:
-    -h, --help                  show this help message and exit
-    -c [], --config-path []     path/to/config.ini file to use 
-                                (Optional: uses local/plexapi default path if omitted)
-    -s [],--schedule-path []    path/to/preroll_schedules.yaml file to use 
-                                (Optional: uses local path if omitted)
-    -l [], --logconfig-path []  path/to/logging.conf logging configuration file 
-                                (Optional: uses local path if omitted)
+  -h, --help            show this help message and exit
+  -v, --version         show the version number and exit
+  -l LOG_CONFIG_FILE, --logconfig-path LOG_CONFIG_FILE
+                        Path to logging config file. [Default: ./logging.conf]
+  -c CONFIG_FILE, --config-path CONFIG_FILE
+                        Path to Config.ini to use for Plex Server info. [Default: ./config.ini]
+  -s SCHEDULE_FILE, --schedule-path SCHEDULE_FILE
+                        Path to pre-roll schedule file (YAML) to be use. [Default: ./preroll_schedules.yaml]
 
 Requirements:
 - See Requirements.txt for Python modules
