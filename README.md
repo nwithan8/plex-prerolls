@@ -33,7 +33,7 @@ Install Python requirements
 pip install -r requirements.txt
 ```
 
-#### Create `config.ini` file with Plex connection information
+### Create `config.ini` file with Plex connection information
 
 Script supports:
 
@@ -53,7 +53,7 @@ server_baseurl = http://127.0.0.1:32400 # your plex server url
 server_token = <PLEX_TOKEN> # access token
 ```
 
-#### Create `preroll_schedules.yaml` file with desired schedule
+### Create `preroll_schedules.yaml` file with desired schedule
 
 Feel free to rename `sample_preroll_schedules.yaml` -> `preroll_schedules.yaml` and update for your environment
 
@@ -88,7 +88,9 @@ default:
     path: /path/to/file.mp4;/path/to/file.mp4
 ```
 
-(Optional) Config `logger.conf` to your needs
+### (Optional) Config `logger.conf` to your needs
+
+See: [https://docs.python.org/3/howto/logging.html](https://docs.python.org/3/howto/logging.html)
 
 ---
 
