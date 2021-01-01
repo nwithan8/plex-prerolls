@@ -34,8 +34,7 @@ misc:
   # always_use: If enabled, always include these video files in pre-role listing
   enabled: Yes
   always_use: /path/to/video.mp4
-  #SearchPath: /mnt/Media/Pre-Roll/Plex/
-  #NumPathSelect: 2
+  # Future Use??  
 default:
   # If enabled, Default listing of prerolls to use if no Schedule (above) is specified for date
   enabled: Yes
