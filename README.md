@@ -7,13 +7,46 @@ Ideas include:
 
 - Holiday pre-roll rotations
 - Special occasions
-- Summer/Winter rotations
+- Summer/Winter/Seasonal rotations
 - Breaking up the monotony
-- Keeping your family/friends on their toes!
+- Keeping your family on their toes!
 
-Set it and forget it!
+Simple steps:
+
+> 1. Config the schedule
+> 2. Schedule script on server
+> 3. ...
+> 4. Profit!
+
+See [Installation & Setup](#install) section
 
 ---
+
+## Schedule Rules
+
+Schedule priority for a given Date:
+
+1. **misc**
+    - always_use - always includes in listing (append)
+
+2. **date_range** \
+Include listing for the specified Start/End date range that include the given Date \
+Multipe ranges may apply at same time (append) \
+**overrides usage of *week/month/default* listings
+
+3. **weekly** \
+Include listing for the specified WEEK of the year for the given Date \
+  **override usage of *month/default* listings
+
+4. **monthly** \
+Include listing for the specified MONTH of the year for the given Date \
+**overrides usage of *week/month/default* listings
+
+5. **default** \
+Default listing used of none of above apply to the given Date
+
+---
+
 ## Installation & Setup <a id="install"></a>
 
 Grab a copy of the code
@@ -35,7 +68,7 @@ pip install -r requirements.txt
 
 ### Create `config.ini` file with Plex connection information
 
-Script supports:
+Script checks for:
 
 - local ./config.ini (See: [Sample](sample_config.ini))
 - PlexAPI global config.ini
@@ -43,7 +76,7 @@ Script supports:
 
 (See: [plexapi.CONFIG](https://python-plexapi.readthedocs.io/en/latest/configuration.html) for more info)
 
-Feel free to rename `sample_config.ini` -> `config.ini` and update to your environment
+Rename `sample_config.ini` -> `config.ini` and update to your environment
 
 Example `config.ini`
 
@@ -55,37 +88,37 @@ server_token = <PLEX_TOKEN> # access token
 
 ### Create `preroll_schedules.yaml` file with desired schedule
 
-Feel free to rename `sample_preroll_schedules.yaml` -> `preroll_schedules.yaml` and update for your environment
+Rename `sample_preroll_schedules.yaml` -> `preroll_schedules.yaml` and update for your environment
 
 Example YAML config layout (See: [Sample](sample_preroll_schedules.yaml) for more info)
 
 ```yaml
 ---
 monthly:
-    enabled: (yes/no)
-    jan: /path/to/file.mp4;/path/to/file.mp4
-    ...
-    dec: jan: /path/to/file.mp4;/path/to/file.mp4
+  enabled: (yes/no)
+  jan: /path/to/file.mp4;/path/to/file.mp4
+  ...
+  dec: /path/to/file.mp4;/path/to/file.mp4
 date_range:
-    enabled: (yes/no)
-    ranges:
-    - start_date: 2020-01-01
-      end_date: 2020-01-01
-      path: /path/to/file(s)
-    - start_date: 2020-07-04
-      end_date: 2020-07-04
-      path: /path/to/file(s)
+  enabled: (yes/no)
+  ranges:
+  - start_date: 2020-01-01
+    end_date: 2020-01-01
+    path: /path/to/file(s)
+  - start_date: 2020-07-04
+    end_date: 2020-07-04
+    path: /path/to/file(s)
 weekly:
-    enabled: (yes/no)
-    1: /path/to/file(s)
-    ...
-    52: /path/to/file(s)
+  enabled: (yes/no)
+  1: /path/to/file(s)
+  ...
+  52: /path/to/file(s)
 misc:
-    enabled: (yes/no)
-    always_use: /path/to/file(s)
+  enabled: (yes/no)
+  always_use: /path/to/file(s)
 default:
-    enabled: (yes/no)
-    path: /path/to/file.mp4;/path/to/file.mp4
+  enabled: (yes/no)
+  path: /path/to/file.mp4;/path/to/file.mp4
 ```
 
 ### (Optional) Config `logger.conf` to your needs
