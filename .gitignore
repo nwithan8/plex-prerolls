@@ -1,3 +1,12 @@
+#Dev environmet
+.devcontainer
+.vscode
+
+# Exclude local Config files
+config.ini
+preroll_schedules.yaml
+preroll_schedules.yml
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -55,8 +64,11 @@ coverage.xml
 *.mo
 *.pot
 
-# Django stuff:
+# Logs
 *.log
+*.log.*
+
+# Django stuff:
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
