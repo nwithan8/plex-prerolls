@@ -64,7 +64,8 @@ coverage.xml
 *.mo
 *.pot
 
-# Logs
+# Logging items
+#/log/ 
 *.log
 *.log.*
 
