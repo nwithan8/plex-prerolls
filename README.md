@@ -102,12 +102,15 @@ monthly:
 date_range:
   enabled: (yes/no)
   ranges:
-  - start_date: 2020-01-01
-    end_date: 2020-01-01
-    path: /path/to/file(s)
-  - start_date: 2020-07-04
-    end_date: 2020-07-04
-    path: /path/to/file(s)
+    - start_date: 2020-01-01
+      end_date: 2020-01-01
+      path: /path/to/video.mp4
+    - start_date: 2020-07-03
+      end_date: 2020-07-05
+      path: /path/to/video.mp4
+    - start_date: 2020-12-19
+      end_date: 2020-12-26
+      path: /path/to/video.mp4
 weekly:
   enabled: (yes/no)
   1: /path/to/file(s)
