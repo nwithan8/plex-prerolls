@@ -63,16 +63,16 @@ def getArguments():
         argparse.Namespace: Namespace object
     """
     description = 'Automate scheduling of pre-roll intros for Plex'
-    version = '0.7.0'
+    version = '0.7.2'
 
-    log_default = './logging.conf'
     config_default = './config.ini'
+    log_config_default = './logging.conf'
     schedule_default = './preroll_schedules.yaml'
     parser = ArgumentParser(description='{}'.format(description))
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(version), help='show the version number and exit')
-    parser.add_argument('-l', '--logconfig-path', dest='log_config_file', default=log_default, action='store', help='Path to logging config file. Default: {}'.format(log_default))
-    parser.add_argument('-c', '--config-path', dest='config_file', action='store', help='Path to Config.ini to use for Plex Server info. Default: {}'.format(config_default))
-    parser.add_argument('-s', '--schedule-path', dest='schedule_file', action='store', help='Path to pre-roll schedule file (YAML) to be use. Default: {}'.format(schedule_default))
+    parser.add_argument('-l', '--logconfig-path', dest='log_config_file', default=log_config_default, action='store', help='Path to logging config file. [Default: {}]'.format(log_config_default))
+    parser.add_argument('-c', '--config-path', dest='config_file', action='store', help='Path to Config.ini to use for Plex Server info. [Default: {}]'.format(config_default))
+    parser.add_argument('-s', '--schedule-path', dest='schedule_file', action='store', help='Path to pre-roll schedule file (YAML) to be use. [Default: {}]'.format(schedule_default))
     args = parser.parse_args()
 
     return args
@@ -90,8 +90,8 @@ def getWeekRange(year, weeknum):
     """Return the starting/ending date range of a given year/week
 
     Args:
-        year (int): Year to calc range for
-        weeknum (int): Month of the year (1-12)
+        year (int):     Year to calc range for
+        weeknum (int):  Month of the year (1-12)
 
     Returns:
         Date: Start date of the Year/Month
@@ -106,7 +106,7 @@ def getMonthRange(year, monthnum):
     """Return the starting/ending date range of a given year/month
 
     Args:
-        year (int): Year to calc range for
+        year (int):     Year to calc range for
         monthnum (int): Month of the year (1-12)
 
     Returns:
@@ -119,8 +119,11 @@ def getMonthRange(year, monthnum):
 
     return start, end
 
-def getPrerollSchedule(filename=None):
+def getPrerollSchedule(schedule_file=None):
     """Return a listing of defined preroll schedules for searching/use
+
+    Args:
+        schedule_file (string): path/to/schedule_preroll.yaml style config file (YAML Format)
 
     Raises:
         FileNotFoundError: If no schedule config file exists
@@ -130,25 +133,25 @@ def getPrerollSchedule(filename=None):
     """
     default_files = ['preroll_schedules.yaml', 'preroll_schedules.yml']
 
-    schedule_file = None
-    if filename != None:
-        if os.path.exists(filename):
-            schedule_file = filename
+    filename = None
+    if schedule_file:
+        if os.path.exists(schedule_file):
+            filename = schedule_file
         else:
-            raise FileNotFoundError('Preroll Schedule file -s "{}" not found'.format(filename))
+            raise FileNotFoundError('Preroll Schedule file -s "{}" not found'.format(schedule_file))
     else:
         for f in default_files:
             if os.path.exists(f):
-                schedule_file = f
+                filename = f
                 break
     
     # if we still cant find a schedule file, we hae to abort
-    if not schedule_file:
+    if not filename:
         msg = 'No {} Found'.format(' / '.join(default_files))
         logger.critical(msg)
         raise FileNotFoundError(msg)
 
-    with open(schedule_file, 'r') as file:
+    with open(filename, 'r') as file:
         #contents = yaml.load(file, Loader=yaml.SafeLoader)
         contents = yaml.load(file, Loader=yaml.FullLoader)
 
@@ -283,8 +286,8 @@ def buildListingString(items, play_all=False):
     """Build the Plex formatted string of preroll paths
 
     Args:
-        items (list): List of preroll video paths to place into a string listing
-        play_all (bool, optional): Play all videos. Defaults to False (Random choice)
+        items (list):               List of preroll video paths to place into a string listing
+        play_all (bool, optional):  Play all videos. [Default: False (Random choice)]
 
     Returns:
         string: CSV Listing (, or ;) based on play_all param of preroll video paths
@@ -299,33 +302,43 @@ def buildListingString(items, play_all=False):
 
     return listing
 
-def getPrerollListingString(schedule_file=None):
+def getPrerollListingString(schedule, for_date=None):
     """Return listing of preroll videos to be used by Plex
 
+    Args:
+        schedule (list):            List of schedule entries (See: getPrerollSchedule)
+        for_Date (date, optional):  Date to process pre-roll string for [Default: Today]
+                                    Useful if wanting to test what different schedules produce
+
     Returns:
-        string: listing of preroll video paths to be used for Extras
+        string: listing of preroll video paths to be used for Extras. CSV style: (;|,)
     """
     listing = ''
     entries = dict(getYAMLSchema())
-    today = datetime.date.today()
 
+    # prep the storage lists
     for e in getYAMLSchema():
         entries[e] = [] 
 
-    # the the time series schedule of pre-rolls
-    schedule = getPrerollSchedule(schedule_file)
 
+    # determine which date to build the listing for
+    if for_date:
+        check_date = for_date
+    else:
+        check_date = datetime.date.today()
+    
+    # process the schedule for the given date
     for entry in schedule:
-        if entry['StartDate'] <= today <= entry['EndDate']:
-            try:
+        try:
+            if entry['StartDate'] <= check_date <= entry['EndDate']:
                 entry_type = entry['Type']
-            except KeyError:
-                continue
+                path = entry['Path']
             
-            path = entry['Path']
-
-            if path:    
-                entries[entry_type].append(path)
+                if path:    
+                    entries[entry_type].append(path)
+        except KeyError as ke:
+            logger.warning('KeyError with entry "{}"'.format(entry), exc_info=ke)
+            continue
 
     # Build the merged output based or order of Priority
     merged_list = []
@@ -346,7 +359,7 @@ def getPrerollListingString(schedule_file=None):
 
     return listing
 
-def setPrerollList(plex, preroll_listing):
+def savePrerollList(plex, preroll_listing):
     """Save Plex Preroll info to PlexServer settings
 
     Args:
@@ -363,11 +376,7 @@ def setPrerollList(plex, preroll_listing):
 if __name__ == '__main__':
     args = getArguments()
 
-    log_config = args.log_config_file
-    if os.path.exists(log_config):
-        logging.config.fileConfig(log_config, disable_existing_loggers=False)
-    else:
-        logger.warning('Logging Config file "{}" not available')
+    plexutil.setupLogger(args.log_config_file)
 
     cfg = plexutil.getPlexConfig(args.config_file)
 
@@ -389,6 +398,8 @@ if __name__ == '__main__':
         logger.error('Error Connecting to Plex', exc_info=e)
         raise e
 
-    prerolls = getPrerollListingString(args.schedule_file)
+    schedule = getPrerollSchedule(args.schedule_file)
+    prerolls = getPrerollListingString(schedule)
+    
     logger.info('Saving Preroll List: "{}"'.format(prerolls))
-    setPrerollList(plex, prerolls)
+    savePrerollList(plex, prerolls)

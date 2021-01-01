@@ -20,7 +20,13 @@ SCRIPT_NAME = os.path.splitext(filename)[0]
 
 def getPlexConfig(config_file=None):
     """Return Plex Config paramaters for connection info {PLEX_URL, PLEX_TOKEN}\n
-    Attempts to use either a local config.ini (primary) as well as a PlexAPI system config.ini (secondary)
+    Attempts to use either:\n
+    * supplier path/to/config file (INI Format)
+    * local config.ini (primary)
+    * PlexAPI system config.ini (secondary)
+
+    Args:
+        config_file (string): path/to/config.ini style config file (INI Format)
 
     Raises:
         KeyError: Config Params not found in config file(s)
@@ -96,6 +102,58 @@ def getPlexConfig(config_file=None):
     cfg['PLEX_TOKEN']= plex_token
 
     return cfg
+
+def setupLogger(log_config):
+    """load and configure a program logger using a supplier logging configuration file \n
+    if possible the program will attempt to create log folders if not already existing
+
+    Args:
+        log_config (string): path/to/logging.(conf|ini) style config file (INI Format)
+
+    Raises:
+        KeyError: Problems processing logging config files
+        FileNotFoundError: Problems with log file location, other
+    """
+    if os.path.exists(log_config):
+        try:
+            logging.config.fileConfig(log_config, disable_existing_loggers=False)
+        except FileNotFoundError as e_fnf:
+            # Assume this is related to a missing Log Folder
+            # Try to create
+            if e_fnf.filename and e_fnf.filename[-3:] == 'log':
+                logfile = e_fnf.filename
+                logdir = os.path.dirname(logfile)
+
+                if not os.path.exists(logdir):
+                    try:
+                        logger.debug('Creating log folder "{}"'.format(logdir))
+                        os.makedirs(logdir, exist_ok=True)
+                    except Exception as e:
+                        logger.error('Error creating log folder "{}"'.format(logdir))
+                        raise e
+            elif logger.handlers:
+                # if logger config loaded, but some file error happened
+                for h in logger.handlers:
+                    if isinstance(h, logging.FileHandler):
+                        logfile = h.baseFilename
+                        logdir = os.path.dirname(logfile)
+
+                        if not os.path.exists(logdir):
+                            try:
+                                logger.debug('Creating log folder "{}"'.format(logdir))
+                                os.makedirs(logdir, exist_ok=True)
+                            except Exception as e:
+                                logger.error('Error creating log folder "{}"'.format(logdir))
+                                raise e
+            else:
+                # not sure the issue, raise the exception
+                raise e_fnf
+
+            # Assuming one of the create Log Folder worked, try again
+            logging.config.fileConfig(log_config, disable_existing_loggers=False)
+
+    else:
+        logger.debug('Logging Config file "{}" not available, will be using defaults'.format(log_config))
 
 if __name__ == '__main__':
     msg = 'Script not meant to be run directly, please import into other scripts.\n\n' + \
