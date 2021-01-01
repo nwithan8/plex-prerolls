@@ -88,8 +88,6 @@ default:
     path: /path/to/file.mp4;/path/to/file.mp4
 ```
 
-Note: if using Sample files rename removeing "sample_" prefix
-
 (Optional) Config `logger.conf` to your needs
 
 ---
@@ -104,7 +102,7 @@ python schedule_preroll.py
 
 ### Runtime Arguments <a id="arguments"></a>
 
-- -v : Version information
+- -v : version information
 - -h : help information
 - -c : config.ini (local or PlexAPI system central) for Connection Info (see [sample_config.ini](sample_config.ini))
 - -s : preroll_schedules.yaml for various scheduling information (see [sample_preroll_schedules.yaml](sample_preroll_schedules.yaml))
