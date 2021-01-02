@@ -70,13 +70,13 @@ pip install -r requirements.txt
 
 Script checks for:
 
-- local ./config.ini (See: [Sample](sample_config.ini))
+- local ./config.ini (See: [Sample](config.ini.sample))
 - PlexAPI global config.ini
 - Custom location config.ini (see [Arguments](#arguments))
 
 (See: [plexapi.CONFIG](https://python-plexapi.readthedocs.io/en/latest/configuration.html) for more info)
 
-Rename `sample_config.ini` -> `config.ini` and update to your environment
+Rename `config.ini.sample` -> `config.ini` and update to your environment
 
 Example `config.ini`
 
@@ -88,9 +88,9 @@ server_token = <PLEX_TOKEN> # access token
 
 ### Create `preroll_schedules.yaml` file with desired schedule
 
-Rename `sample_preroll_schedules.yaml` -> `preroll_schedules.yaml` and update for your environment
+Rename `preroll_schedules.yaml.sample` -> `preroll_schedules.yaml` and update for your environment
 
-Example YAML config layout (See: [Sample](sample_preroll_schedules.yaml) for more info)
+Example YAML config layout (See: [Sample](preroll_schedules.yaml.sample) for more info)
 
 ```yaml
 ---
@@ -142,8 +142,8 @@ python schedule_preroll.py
 
 - -v : version information
 - -h : help information
-- -c : config.ini (local or PlexAPI system central) for Connection Info (see [sample_config.ini](sample_config.ini))
-- -s : preroll_schedules.yaml for various scheduling information (see [sample_preroll_schedules.yaml](sample_preroll_schedules.yaml))
+- -c : config.ini (local or PlexAPI system central) for Connection Info (see [config.ini.sample](config.ini.sample))
+- -s : preroll_schedules.yaml for various scheduling information (see [spreroll_schedules.yaml.sample](preroll_schedules.yaml.sample))
 - -l : location of custom logger.conf config file \
 See:
   - Sample [logger config](logging.conf)
