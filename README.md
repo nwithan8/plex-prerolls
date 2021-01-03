@@ -32,6 +32,7 @@ Schedule priority for a given Date:
 2. **date_range** \
 Include listing for the specified Start/End date range that include the given Date \
 Multipe ranges may apply at same time (append) \
+Range can be specified as a Date or DateTime \
 **overrides usage of *week/month/default* listings
 
 3. **weekly** \
@@ -106,8 +107,8 @@ monthly:
 date_range:
   enabled: (yes/no)
   ranges:
-    - start_date: 2020-01-01 12:01:00
-      end_date: 2020-01-01 16:59:59
+    - start_date: 2020-01-01
+      end_date: 2020-01-01
       path: /path/to/video.mp4
     - start_date: 2020-07-03
       end_date: 2020-07-05
@@ -129,8 +130,8 @@ default:
 ```
 
 #### Date Range Section:
-Use it for *Day* or *Ranges of Time* needs; \
-Now with Time support!
+Use it for *Day* or *Ranges of Time* needs \
+Now with Time support! (optional)
 
 Formatting Supported:
 
