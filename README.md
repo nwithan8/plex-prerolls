@@ -58,7 +58,11 @@ git clone https://github.com/BrianLindner/plex-schedule-prerolls.git
 
 ### Install Requirements <a id="requirements"></a>
 
-See `requirements.txt` for Python modules [link](requirements.txt)
+Requires:
+
+- Python 3.8+  [may work on 3.5+ but not tested]
+
+See `requirements.txt` for Python modules used [link](requirements.txt)
 
 Install Python requirements
 
@@ -102,8 +106,8 @@ monthly:
 date_range:
   enabled: (yes/no)
   ranges:
-    - start_date: 2020-01-01
-      end_date: 2020-01-01
+    - start_date: 2020-01-01 12:01:00
+      end_date: 2020-01-01 16:59:59
       path: /path/to/video.mp4
     - start_date: 2020-07-03
       end_date: 2020-07-05
@@ -123,6 +127,15 @@ default:
   enabled: (yes/no)
   path: /path/to/file.mp4;/path/to/file.mp4
 ```
+
+#### Date Range Section:
+Use it for *Day* or *Ranges of Time* needs; \
+Now with Time support!
+
+Formatting Supported:
+
+- Dates: yyyy-mm-dd
+- DateTime: yyyy-mm-dd hh:mm:ss  (24hr time format)
 
 ### (Optional) Config `logger.conf` to your needs
 

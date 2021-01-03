@@ -29,19 +29,20 @@ Raises:
     ConfigError: [description]
     FileNotFoundError: [description]
 """
+
 import os
 import sys
 import logging
-import logging.config
 import requests
 import datetime
+from datetime import datetime, date, time, timedelta
 import yaml
 from argparse import ArgumentParser
 from configparser import ConfigParser
 from configparser import Error as ConfigError
 from plexapi.server import PlexServer, CONFIG
 
-# import local modules
+# import local util modules
 import plexutil
 
 logger = logging.getLogger(__name__)
@@ -57,16 +58,24 @@ def getArguments():
         argparse.Namespace: Namespace object
     """
     description = 'Automate scheduling of pre-roll intros for Plex'
-    version = '0.7.2'
+    version = '0.8.0'
 
     config_default = './config.ini'
     log_config_default = './logging.conf'
     schedule_default = './preroll_schedules.yaml'
     parser = ArgumentParser(description='{}'.format(description))
-    parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(version), help='show the version number and exit')
-    parser.add_argument('-l', '--logconfig-path', dest='log_config_file', default=log_config_default, action='store', help='Path to logging config file. [Default: {}]'.format(log_config_default))
-    parser.add_argument('-c', '--config-path', dest='config_file', action='store', help='Path to Config.ini to use for Plex Server info. [Default: {}]'.format(config_default))
-    parser.add_argument('-s', '--schedule-path', dest='schedule_file', action='store', help='Path to pre-roll schedule file (YAML) to be use. [Default: {}]'.format(schedule_default))
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(version), 
+                        help='show the version number and exit')
+    parser.add_argument('-l', '--logconfig-path', 
+                        dest='log_config_file', action='store',
+                        default=log_config_default,  
+                        help='Path to logging config file. [Default: {}]'.format(log_config_default))
+    parser.add_argument('-c', '--config-path', 
+                        dest='config_file', action='store', 
+                        help='Path to Config.ini to use for Plex Server info. [Default: {}]'.format(config_default))
+    parser.add_argument('-s', '--schedule-path', 
+                        dest='schedule_file', action='store', 
+                        help='Path to pre-roll schedule file (YAML) to be use. [Default: {}]'.format(schedule_default))
     args = parser.parse_args()
 
     return args
@@ -77,7 +86,8 @@ def getYAMLSchema():
     Returns:
         dict: Dict of main schema items
     """
-    schema = {'default': None, 'monthly': None, 'weekly': None, 'date_range': None, 'misc': None}
+    schema = {'default': None, 'monthly': None, 
+                'weekly': None, 'date_range': None, 'misc': None}
     return schema
 
 def getWeekRange(year, weeknum):
@@ -91,8 +101,9 @@ def getWeekRange(year, weeknum):
         Date: Start date of the Year/Month
         Date: End date of the Year/Month
     """
-    start = datetime.datetime.strptime('{}-W{}-0'.format(year, int(weeknum)-1), "%Y-W%W-%w").date()
-    end = start + datetime.timedelta(days=6)
+    start = datetime.strptime('{}-W{}-0'.format(year, int(weeknum)-1), 
+                                        "%Y-W%W-%w").date()
+    end = start + timedelta(days=6)
 
     return start, end
 
@@ -107,9 +118,9 @@ def getMonthRange(year, monthnum):
         Date: Start date of the Year/Month
         Date: End date of the Year/Month
     """
-    start = datetime.date(year, monthnum, 1)
-    next_month = start.replace(day=28) + datetime.timedelta(days=4)
-    end = next_month - datetime.timedelta(days=next_month.day)
+    start = date(year, monthnum, 1)
+    next_month = start.replace(day=28) + timedelta(days=4)
+    end = next_month - timedelta(days=next_month.day)
 
     return start, end
 
@@ -132,16 +143,17 @@ def getPrerollSchedule(schedule_file=None):
         if os.path.exists(schedule_file):
             filename = schedule_file
         else:
-            raise FileNotFoundError('Preroll Schedule file -s "{}" not found'.format(schedule_file))
+            msg = 'Pre-roll Schedule file "{}" not found'.format(schedule_file)
+            raise FileNotFoundError(msg)
     else:
         for f in default_files:
             if os.path.exists(f):
                 filename = f
                 break
     
-    # if we still cant find a schedule file, we hae to abort
+    # if we still cant find a schedule file, we abort
     if not filename:
-        msg = 'No {} Found'.format(' / '.join(default_files))
+        msg = 'Missing schedule file: "{}"'.format('" / "'.join(default_files))
         logger.critical(msg)
         raise FileNotFoundError(msg)
 
@@ -149,7 +161,7 @@ def getPrerollSchedule(schedule_file=None):
         #contents = yaml.load(file, Loader=yaml.SafeLoader)
         contents = yaml.load(file, Loader=yaml.FullLoader)
 
-    today = datetime.date.today()
+    today = date.today()
     schedule = []
     for schedule_type in getYAMLSchema():
         if schedule_type == 'weekly':
@@ -172,10 +184,12 @@ def getPrerollSchedule(schedule_file=None):
                                 schedule.append(entry)
                         except KeyError as e:
                             # skip KeyError for missing Weeks
-                            logger.debug('Key Value not found: "{}"->"{}", skipping week'.format(schedule_type, i))
+                            msg = 'Key Value not found: "{}"->"{}", skipping week'.format(schedule_type, i)
+                            logger.debug(msg)
                             continue
             except KeyError as e:
-                logger.error('Key Value not found in "{}" section'.format(schedule_type), exc_info=e)
+                msg = 'Key Value not found in "{}" section'.format(schedule_type)
+                logger.error(msg, exc_info=e)
                 raise e
         elif schedule_type == 'monthly':
             try:
@@ -183,7 +197,7 @@ def getPrerollSchedule(schedule_file=None):
 
                 if use:
                     for i in range(1,13):
-                        month_abrev = datetime.date(today.year, i, 1).strftime('%b').lower()
+                        month_abrev = date(today.year, i, 1).strftime('%b').lower()
                         try:
                             path = contents[schedule_type][month_abrev]    
 
@@ -198,10 +212,12 @@ def getPrerollSchedule(schedule_file=None):
                                 schedule.append(entry)
                         except KeyError as e:
                             # skip KeyError for missing Months
-                            logger.warning('Key Value not found: "{}"->"{}", skipping month'.format(schedule_type, month_abrev))
+                            msg = 'Key Value not found: "{}"->"{}", skipping month'.format(schedule_type, month_abrev)
+                            logger.warning(msg)
                             continue
             except KeyError as e:
-                logger.error('Key Value not found in "{}" section'.format(schedule_type), exc_info=e)
+                msg = 'Key Value not found in "{}" section'.format(schedule_type)
+                logger.error(msg, exc_info=e)
                 raise e
         elif schedule_type == 'date_range':
             try:
@@ -223,7 +239,8 @@ def getPrerollSchedule(schedule_file=None):
                             #logger.error('Key Value not found: "{}"'.format(schedule_type), exc_info=e)
                             raise e
             except KeyError as e:
-                logger.error('Key Value not found in "{}" section'.format(schedule_type), exc_info=e)
+                msg = 'Key Value not found in "{}" section'.format(schedule_type)
+                logger.error(msg, exc_info=e)
                 raise e
         elif schedule_type == 'misc':
             try:
@@ -235,8 +252,8 @@ def getPrerollSchedule(schedule_file=None):
                         if path:
                             entry = {}
                             entry['Type'] = schedule_type
-                            entry['StartDate'] = datetime.date(today.year, today.month, today.day)
-                            entry['EndDate'] = datetime.date(today.year, today.month, today.day)
+                            entry['StartDate'] = date(today.year, today.month, today.day)
+                            entry['EndDate'] = date(today.year, today.month, today.day)
                             entry['Path'] = path
 
                             schedule.append(entry)
@@ -244,7 +261,8 @@ def getPrerollSchedule(schedule_file=None):
                         #logger.error('Key Value not found: "{}"'.format(schedule_type), exc_info=e)
                         raise e
             except KeyError as e:
-                logger.error('Key Value not found in "{}" section'.format(schedule_type), exc_info=e)
+                msg = 'Key Value not found in "{}" section'.format(schedule_type)
+                logger.error(msg, exc_info=e)
                 raise e
         elif schedule_type == 'default':
             try:
@@ -256,8 +274,9 @@ def getPrerollSchedule(schedule_file=None):
                         if path:
                             entry = {}
                             entry['Type'] = schedule_type
-                            entry['StartDate'] = datetime.date(today.year, today.month, today.day)
-                            entry['EndDate'] = datetime.date(today.year, today.month, today.day)
+                            entry['StartDate'] = date(today.year, today.month, today.day)
+                            entry['EndDate'] = date(today.year, today.month, today.day)
+                            
                             entry['Path'] = path
 
                             schedule.append(entry)
@@ -265,7 +284,8 @@ def getPrerollSchedule(schedule_file=None):
                         #logger.error('Key Value not found: "{}"'.format(schedule_type), exc_info=e)
                         raise e
             except KeyError as e:
-                logger.error('Key Value not found in "{}" section'.format(schedule_type), exc_info=e)
+                msg = 'Key Value not found in "{}" section'.format(schedule_type)
+                logger.error(msg, exc_info=e)
                 raise e
 
         else:
@@ -296,42 +316,58 @@ def buildListingString(items, play_all=False):
 
     return listing
 
-def getPrerollListingString(schedule, for_date=None):
+def getPrerollListingString(schedule, for_datetime=None):
     """Return listing of preroll videos to be used by Plex
 
     Args:
-        schedule (list):            List of schedule entries (See: getPrerollSchedule)
-        for_Date (date, optional):  Date to process pre-roll string for [Default: Today]
-                                    Useful if wanting to test what different schedules produce
+        schedule (list):                    List of schedule entries (See: getPrerollSchedule)
+        for_datetime (datetime, optional):  Date to process pre-roll string for [Default: Today]
+                                            Useful if wanting to test what different schedules produce
 
     Returns:
         string: listing of preroll video paths to be used for Extras. CSV style: (;|,)
     """
     listing = ''
-    entries = dict(getYAMLSchema())
+    entries = {}
 
     # prep the storage lists
-    for e in getYAMLSchema():
-        entries[e] = [] 
-
+    for y in getYAMLSchema():
+        entries[y] = [] 
 
     # determine which date to build the listing for
-    if for_date:
-        check_date = for_date
+    if for_datetime:
+        if isinstance(for_datetime, datetime):
+            check_datetime = for_datetime 
+        else:
+            check_datetime = datetime.combine(for_datetime, datetime.now().time())
     else:
-        check_date = datetime.date.today()
+        check_datetime = datetime.now()
     
     # process the schedule for the given date
     for entry in schedule:
         try:
-            if entry['StartDate'] <= check_date <= entry['EndDate']:
+            entry_start = entry['StartDate']
+            entry_end = entry['EndDate']
+            if not isinstance(entry_start, datetime):
+                entry_start = datetime.combine(entry_start, datetime.min.time())
+            if not isinstance(entry_end, datetime):
+                entry_end = datetime.combine(entry_end, datetime.max.time())
+
+            msg = 'checking "{}" against: "{}" - "{}"'.format(check_datetime, entry_start, entry_end)
+            logger.debug(msg)
+
+            if entry_start <= check_datetime <= entry_end:
                 entry_type = entry['Type']
                 path = entry['Path']
-            
+
+                msg = 'pass: Using "{}" - "{}"'.format(entry_start, entry_end)
+                logger.debug(msg)
+
                 if path:    
                     entries[entry_type].append(path)
         except KeyError as ke:
-            logger.warning('KeyError with entry "{}"'.format(entry), exc_info=ke)
+            msg = 'KeyError with entry "{}"'.format(entry)
+            logger.warning(msg, exc_info=ke)
             continue
 
     # Build the merged output based or order of Priority
@@ -389,11 +425,14 @@ if __name__ == '__main__':
     try:
         plex = PlexServer(cfg['PLEX_URL'], cfg['PLEX_TOKEN'], session=sess)
     except Exception as e:
-        logger.error('Error Connecting to Plex', exc_info=e)
+        msg = 'Error connecting to Plex'
+        logger.error(msg, exc_info=e)
         raise e
 
     schedule = getPrerollSchedule(args.schedule_file)
     prerolls = getPrerollListingString(schedule)
     
-    logger.info('Saving Preroll List: "{}"'.format(prerolls))
     savePrerollList(plex, prerolls)
+
+    msg = 'Saved pre-roll list to server: "{}"'.format(prerolls)
+    logger.info(msg)

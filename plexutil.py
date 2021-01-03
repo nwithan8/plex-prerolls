@@ -10,6 +10,7 @@ Raises:
 import os
 import sys
 import logging
+import logging.config
 from configparser import ConfigParser
 from plexapi.server import PlexServer, CONFIG
 
@@ -30,11 +31,12 @@ def getPlexConfig(config_file=None):
 
     Raises:
         KeyError: Config Params not found in config file(s)
-        FileNotFoundError: If cannot find a config file
+        FileNotFoundError: Cannot find a config file
 
     Returns:
         dict: Dict of config params {PLEX_URL, PLEX_TOKEN}
     """
+
     cfg = {}
     plex_url = ''
     plex_token = ''
@@ -48,7 +50,7 @@ def getPlexConfig(config_file=None):
         if os.path.exists(config_file):
            filename = config_file
         else:
-            raise FileNotFoundError('Config file -c "{}" not found'.format(config_file))
+            raise FileNotFoundError('Config file "{}" not found'.format(config_file))
     else:
         filename = 'config.ini'
 
@@ -66,7 +68,8 @@ def getPlexConfig(config_file=None):
                 if len(plex_url) > 1 and len(plex_token) > 1:
                     use_local_config = True
             except KeyError as e:
-                logger.error('Key Value not found {}', exc_info=e)
+                msg = 'Key Value not found {}'
+                logger.error(msg, exc_info=e)
                 raise e
         else:
             msg = '[auth] section not found in LOCAL config.ini file'
@@ -86,7 +89,8 @@ def getPlexConfig(config_file=None):
                 if len(plex_url) > 1 and len(plex_token) > 1:
                     use_plexapi_config = True
             except KeyError as e:
-                logger.error('Key Value not found', exc_info=e)
+                msg = 'Key Value not found'
+                logger.error(msg, exc_info=e)
                 raise e
         else:
             msg = "[auth] section not found in PlexAPI MAIN config.ini file"
@@ -114,6 +118,7 @@ def setupLogger(log_config):
         KeyError: Problems processing logging config files
         FileNotFoundError: Problems with log file location, other
     """
+
     if os.path.exists(log_config):
         try:
             logging.config.fileConfig(log_config, disable_existing_loggers=False)
@@ -126,10 +131,12 @@ def setupLogger(log_config):
 
                 if not os.path.exists(logdir):
                     try:
-                        logger.debug('Creating log folder "{}"'.format(logdir))
+                        msg = 'Creating log folder "{}"'.format(logdir)
+                        logger.debug(msg)
                         os.makedirs(logdir, exist_ok=True)
                     except Exception as e:
-                        logger.error('Error creating log folder "{}"'.format(logdir))
+                        msg = 'Error creating log folder "{}"'.format(logdir)
+                        logger.error(msg, exc_info=e)
                         raise e
             elif logger.handlers:
                 # if logger config loaded, but some file error happened
@@ -140,10 +147,13 @@ def setupLogger(log_config):
 
                         if not os.path.exists(logdir):
                             try:
-                                logger.debug('Creating log folder "{}"'.format(logdir))
+                                msg = 'Creating log folder "{}"'.format(logdir)
+                                logger.debug(msg)
+
                                 os.makedirs(logdir, exist_ok=True)
                             except Exception as e:
-                                logger.error('Error creating log folder "{}"'.format(logdir))
+                                msg = 'Error creating log folder "{}"'.format(logdir)
+                                logger.error(msg, exc_info=e)
                                 raise e
             else:
                 # not sure the issue, raise the exception
@@ -153,7 +163,8 @@ def setupLogger(log_config):
             logging.config.fileConfig(log_config, disable_existing_loggers=False)
 
     else:
-        logger.debug('Logging Config file "{}" not available, will be using defaults'.format(log_config))
+        msg = 'Logging Config file "{}" not available, will be using defaults'.format(log_config)
+        logger.debug(msg)
 
 if __name__ == '__main__':
     msg = 'Script not meant to be run directly, please import into other scripts.\n\n' + \
