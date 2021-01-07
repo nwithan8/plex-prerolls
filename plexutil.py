@@ -9,7 +9,7 @@ import os
 import sys
 import logging
 import logging.config
-from typing import Dict, List
+from typing import Optional, Dict, List
 from configparser import ConfigParser
 from plexapi.server import PlexServer, CONFIG
 
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 filename = os.path.basename(sys.argv[0])
 SCRIPT_NAME = os.path.splitext(filename)[0]
 
-def getPlexConfig(config_file: str='') -> Dict[str,str]:
+def getPlexConfig(config_file: Optional[str]='') -> Dict[str,str]:
     """Return Plex Config paramaters for connection info {PLEX_URL, PLEX_TOKEN}\n
     Attempts to use one of either:\n
     * supplier path/to/config file (INI Format)

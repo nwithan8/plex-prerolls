@@ -68,15 +68,15 @@ def getArguments() -> Namespace:
         argparse.Namespace: Namespace object
     """
     description = 'Automate scheduling of pre-roll intros for Plex'
-    version = '0.9.0'
+    version = '0.9.1'
 
-    config_default = None #'./config.ini'
+    config_default = '' # './config.ini'
     log_config_default = './logging.conf'
     schedule_default = './preroll_schedules.yaml'
     parser = ArgumentParser(description='{}'.format(description))
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(version), 
                         help='show the version number and exit')
-    parser.add_argument('-lc', '--logconfig-path', 
+    parser.add_argument('-lc', '--logconfig-file', 
                         dest='log_config_file', action='store',
                         default=log_config_default,  
                         help='Path to logging config file. [Default: {}]'.format(log_config_default))
@@ -84,10 +84,10 @@ def getArguments() -> Namespace:
                         dest='do_test_run', action='store_true',
                         default=False,
                         help='Perform a test run, display output but dont save')
-    parser.add_argument('-c', '--config-path', 
+    parser.add_argument('-c', '--config-file', 
                         dest='config_file', action='store', 
                         help='Path to Config.ini to use for Plex Server info. [Default: {}]'.format(config_default))
-    parser.add_argument('-s', '--schedule-path', 
+    parser.add_argument('-s', '--schedule-file', 
                         dest='schedule_file', action='store', 
                         help='Path to pre-roll schedule file (YAML) to be use. [Default: {}]'.format(schedule_default))
     args = parser.parse_args()
