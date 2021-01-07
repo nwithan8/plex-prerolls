@@ -68,7 +68,7 @@ def getArguments() -> Namespace:
         argparse.Namespace: Namespace object
     """
     description = 'Automate scheduling of pre-roll intros for Plex'
-    version = '0.9.1'
+    version = '0.9.2'
 
     config_default = '' # './config.ini'
     log_config_default = './logging.conf'
@@ -441,7 +441,7 @@ def getPrerollListing(schedule:List[ScheduleEntry], for_datetime:Optional[dateti
                         entries[entry_type].append(entry)
         except KeyError as ke:
             msg = 'KeyError with entry "{}"'.format(entry)
-            logger.warning(msg, exc_info=ke)
+            logger.error(msg, exc_info=ke)
             raise
 
     # Build the merged output based or order of Priority
