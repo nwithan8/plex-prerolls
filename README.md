@@ -31,7 +31,6 @@ Schedule priority for a given Date:
 
 2. **date_range** \
 Include listing for the specified Start/End date range that include the given Date \
-Multipe ranges may apply at same time (append) \
 Range can be specified as a Date or DateTime \
 **overrides usage of *week/month/default* listings
 
@@ -41,7 +40,7 @@ Include listing for the specified WEEK of the year for the given Date \
 
 4. **monthly** \
 Include listing for the specified MONTH of the year for the given Date \
-**overrides usage of *week/month/default* listings
+**overrides usage of *default* listings
 
 5. **default** \
 Default listing used of none of above apply to the given Date
@@ -129,7 +128,8 @@ default:
   path: /path/to/file.mp4;/path/to/file.mp4
 ```
 
-#### Date Range Section:
+#### Date Range Section
+
 Use it for *Day* or *Ranges of Time* needs \
 Now with Time support! (optional)
 
@@ -158,7 +158,7 @@ python schedule_preroll.py
 - -h : help information
 - -c : config.ini (local or PlexAPI system central) for Connection Info (see [config.ini.sample](config.ini.sample))
 - -s : preroll_schedules.yaml for various scheduling information (see [spreroll_schedules.yaml.sample](preroll_schedules.yaml.sample))
-- -l : location of custom logger.conf config file \
+- -lc : location of custom logger.conf config file \
 See:
   - Sample [logger config](logging.conf)
   - Logger usage [Examples](https://github.com/amilstead/python-logging-examples/blob/master/configuration/fileConfig/config.ini)
@@ -174,7 +174,7 @@ Automate scheduling of pre-roll intros for Plex
 optional arguments:
   -h, --help            show this help message and exit
   -v, --version         show the version number and exit
-  -l LOG_CONFIG_FILE, --logconfig-path LOG_CONFIG_FILE
+  -lc LOG_CONFIG_FILE, --logconfig-path LOG_CONFIG_FILE
                         Path to logging config file. [Default: ./logging.conf]
   -c CONFIG_FILE, --config-path CONFIG_FILE
                         Path to Config.ini to use for Plex Server info. [Default: ./config.ini]
@@ -188,7 +188,7 @@ optional arguments:
 python schedule_preroll.py \
     -c path/to/custom/config.ini \
     -s path/to/custom/preroll_schedules.yaml \
-    -l path/to/custom/logger.conf
+    -lc path/to/custom/logger.conf
 ```
 
 ---

@@ -4,13 +4,12 @@
 Raises:
     FileNotFoundError: [description]
     KeyError: [description]
-    KeyError: [description]
-    ConfigError: [description]
 """
 import os
 import sys
 import logging
 import logging.config
+from typing import Dict, List
 from configparser import ConfigParser
 from plexapi.server import PlexServer, CONFIG
 
@@ -19,15 +18,15 @@ logger = logging.getLogger(__name__)
 filename = os.path.basename(sys.argv[0])
 SCRIPT_NAME = os.path.splitext(filename)[0]
 
-def getPlexConfig(config_file=None):
+def getPlexConfig(config_file: str='') -> Dict[str,str]:
     """Return Plex Config paramaters for connection info {PLEX_URL, PLEX_TOKEN}\n
-    Attempts to use either:\n
+    Attempts to use one of either:\n
     * supplier path/to/config file (INI Format)
     * local config.ini (primary)
     * PlexAPI system config.ini (secondary)
 
     Args:
-        config_file (string): path/to/config.ini style config file (INI Format)
+        config_file (str): path/to/config.ini style config file (INI Format)
 
     Raises:
         KeyError: Config Params not found in config file(s)
@@ -37,22 +36,20 @@ def getPlexConfig(config_file=None):
         dict: Dict of config params {PLEX_URL, PLEX_TOKEN}
     """
 
-    cfg = {}
+    cfg = {} # type: Dict[str, str]
     plex_url = ''
     plex_token = ''
+    filename = ''
     use_local_config = False
     use_plexapi_config = False
 
     # Look for a local Config.ini file, use settings if present
     local_config = ConfigParser()
 
-    if config_file != None:
-        if os.path.exists(config_file):
-           filename = config_file
-        else:
-            raise FileNotFoundError('Config file "{}" not found'.format(config_file))
-    else:
+    if config_file == None or config_file == '':
         filename = 'config.ini'
+    else:
+        filename = str(config_file)
 
     #try reading a local file
     local_config.read(filename)
@@ -98,21 +95,21 @@ def getPlexConfig(config_file=None):
             raise KeyError(msg)
 
     if not use_local_config and not use_plexapi_config:
-        msg = 'No Plex config information found {server_baseurl, server_token}'
+        msg = 'ConfigFile Error: No Plex config information found {server_baseurl, server_token}'
         logger.error(msg)
-        raise ConfigError(msg) 
+        raise FileNotFoundError(msg) 
 
     cfg['PLEX_URL'] = plex_url
     cfg['PLEX_TOKEN']= plex_token
 
     return cfg
 
-def setupLogger(log_config):
+def setupLogger(log_config: str) -> None:
     """load and configure a program logger using a supplier logging configuration file \n
     if possible the program will attempt to create log folders if not already existing
 
     Args:
-        log_config (string): path/to/logging.(conf|ini) style config file (INI Format)
+        log_config (str): path/to/logging.(conf|ini) style config file (INI Format)
 
     Raises:
         KeyError: Problems processing logging config files
