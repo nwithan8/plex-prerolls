@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 filename = os.path.basename(sys.argv[0])
 SCRIPT_NAME = os.path.splitext(filename)[0]
 
-def getPlexConfig(config_file: Optional[str]='') -> Dict[str,str]:
+def plex_config(config_file: Optional[str]='') -> Dict[str,str]:
     """Return Plex Config paramaters for connection info {PLEX_URL, PLEX_TOKEN}\n
     Attempts to use one of either:\n
     * supplier path/to/config file (INI Format)
@@ -104,7 +104,7 @@ def getPlexConfig(config_file: Optional[str]='') -> Dict[str,str]:
 
     return cfg
 
-def setupLogger(log_config: str) -> None:
+def init_logger(log_config: str) -> None:
     """load and configure a program logger using a supplier logging configuration file \n
     if possible the program will attempt to create log folders if not already existing
 

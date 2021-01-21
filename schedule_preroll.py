@@ -9,11 +9,14 @@ Optional Arguments:
   -h, --help            show this help message and exit
   -v, --version         show the version number and exit
   -lc LOG_CONFIG_FILE, --logconfig-path LOG_CONFIG_FILE
-                        Path to logging config file. [Default: ./logging.conf]
+                        Path to logging config file. 
+                        [Default: ./logging.conf]
   -c CONFIG_FILE, --config-path CONFIG_FILE
-                        Path to Config.ini to use for Plex Server info. [Default: ./config.ini]
+                        Path to Config.ini to use for Plex Server info. 
+                        [Default: ./config.ini]
   -s SCHEDULE_FILE, --schedule-path SCHEDULE_FILE
-                        Path to pre-roll schedule file (YAML) to be use. [Default: ./preroll_schedules.yaml]
+                        Path to pre-roll schedule file (YAML) to be use. 
+                        [Default: ./preroll_schedules.yaml]
 
 Requirements:
 - See Requirements.txt for Python modules
@@ -50,65 +53,73 @@ logger = logging.getLogger(__name__)
 filename = os.path.basename(sys.argv[0])
 SCRIPT_NAME = os.path.splitext(filename)[0]
 
-#ScheduleEntry = Dict[str, Union[str, bool, date, datetime]]
 class ScheduleEntry(NamedTuple):
     type: str
-    startdate: Union[date,datetime]
-    enddate: Union[date,datetime]
+    startdate: datetime
+    enddate: datetime
     force: bool
     path: str
 
-ScheduleType = Dict[str, ScheduleEntry]
+ScheduleType = Dict[str, List[ScheduleEntry]]
 
-def getArguments() -> Namespace:
-    """Return command line arguments
+def arguments() -> Namespace:
+    """Setup and Return command line arguments
     See https://docs.python.org/3/howto/argparse.html
 
     Returns:
         argparse.Namespace: Namespace object
     """
     description = 'Automate scheduling of pre-roll intros for Plex'
-    version = '0.9.2'
+    version = '0.10.1'
 
-    config_default = '' # './config.ini'
+    config_default = './config.ini'
     log_config_default = './logging.conf'
     schedule_default = './preroll_schedules.yaml'
     parser = ArgumentParser(description='{}'.format(description))
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(version), 
-                        help='show the version number and exit')
+                        help='show the version number and exit'
+                        )
     parser.add_argument('-lc', '--logconfig-file', 
                         dest='log_config_file', action='store',
                         default=log_config_default,  
-                        help='Path to logging config file. [Default: {}]'.format(log_config_default))
+                        help='Path to logging config file. [Default: {}]' \
+                                .format(log_config_default)
+                        )
     parser.add_argument('-t', '--test-run', 
                         dest='do_test_run', action='store_true',
                         default=False,
-                        help='Perform a test run, display output but dont save')
+                        help='Perform a test run, display output but dont save'
+                        )
     parser.add_argument('-c', '--config-file', 
                         dest='config_file', action='store', 
-                        help='Path to Config.ini to use for Plex Server info. [Default: {}]'.format(config_default))
+                        help='Path to Config.ini to use for Plex Server info. [Default: {}]' \
+                                .format(config_default)
+                        )
     parser.add_argument('-s', '--schedule-file', 
                         dest='schedule_file', action='store', 
-                        help='Path to pre-roll schedule file (YAML) to be use. [Default: {}]'.format(schedule_default))
+                        help='Path to pre-roll schedule file (YAML) to be use. [Default: {}]' \
+                                .format(schedule_default)
+                        )
     args = parser.parse_args()
 
     return args
 
-def getYAMLSchema() -> Dict[str, List[ScheduleEntry]]:
-    """Return the main schema layout of the preroll_schedules.yaml file
+def schedule_types() -> ScheduleType:
+    """Return the main types of schedules to be used for storage processing
 
     Returns:
-        Dict (List[ScheduleType]): Dict of main schema items
+        ScheduleType: Dict of main schema items
     """
-    schema = {'default': [],
-              'monthly': [],
-              'weekly': [],
-              'date_range': [],
-              'misc': []
-              } # type: Dict[str, List[ScheduleEntry]]
+    schema : ScheduleType = {
+                'default': [],
+                'monthly': [],
+                'weekly': [],
+                'date_range': [],
+                'misc': []
+            }
     return schema
 
-def getWeekRange(year:int, weeknum:int) -> Tuple[date, date]:
+def week_range(year:int, weeknum:int) -> Tuple[datetime, datetime]:
     """Return the starting/ending date range of a given year/week
 
     Args:
@@ -116,16 +127,19 @@ def getWeekRange(year:int, weeknum:int) -> Tuple[date, date]:
         weeknum (int):  Month of the year (1-12)
 
     Returns:
-        Date: Start date of the Year/Month
-        Date: End date of the Year/Month
+        DateTime: Start date of the Year/Month
+        DateTime: End date of the Year/Month
     """
     start = datetime.strptime('{}-W{}-0'.format(year, int(weeknum)-1), 
                                         "%Y-W%W-%w").date()
     end = start + timedelta(days=6)
 
-    return start, end
+    start = datetime.combine(start, datetime.min.time())
+    end = datetime.combine(end, datetime.max.time())
 
-def getMonthRange(year:int, monthnum:int) -> Tuple[date, date]:
+    return (start, end)
+
+def month_range(year:int, monthnum:int) -> Tuple[datetime, datetime]:
     """Return the starting/ending date range of a given year/month
 
     Args:
@@ -133,14 +147,17 @@ def getMonthRange(year:int, monthnum:int) -> Tuple[date, date]:
         monthnum (int): Month of the year (1-12)
 
     Returns:
-        Date: Start date of the Year/Month
-        Date: End date of the Year/Month
+        DateTime: Start date of the Year/Month
+        DateTime: End date of the Year/Month
     """
     start = date(year, monthnum, 1)
     next_month = start.replace(day=28) + timedelta(days=4)
     end = next_month - timedelta(days=next_month.day)
 
-    return start, end
+    start = datetime.combine(start, datetime.min.time())
+    end = datetime.combine(end, datetime.max.time())
+
+    return (start, end)
 
 def duration_seconds(start:Union[date,datetime], end:Union[date,datetime]) -> float:
     """Return length of time between two date/datetime in seconds
@@ -159,10 +176,90 @@ def duration_seconds(start:Union[date,datetime], end:Union[date,datetime]) -> fl
 
     delta = end - start
     
-    logger.debug('duration_second[] Start: {} End: {} Duration: {}'.format(start, end, delta.total_seconds()))
+    logger.debug('duration_second[] Start: {} End: {} Duration: {}'.format(start, 
+                                                                        end, 
+                                                                        delta.total_seconds()
+                                                                    ))
     return delta.total_seconds()
 
-def getPrerollSchedule(schedule_file:Optional[str]=None) -> List[ScheduleEntry]:
+def make_datetime(value: Union[str, date, datetime], lowtime: bool=True) -> datetime:
+    """Returns a DateTime object with a calculated Time component if none provided
+      converts: 
+      * Date to DateTime, with a Time of Midnight 00:00 or 11:59 pm
+      * String to DateTime, with a Time as defined in the string
+
+    Args:
+        value (Union[str, date, datetime]): Input value to convert to a DateTime object
+        lowtime (bool, optional): Calculate time to be midnight (True) or 11:59 PM (False). 
+                                    Defaults to True.
+
+    Raises:
+        TypeError: Unknown type to calculate
+
+    Returns:
+        datetime: DateTime object with time component set if none provided
+    """
+    today = date.today()
+    now = datetime.now()
+    dt_val = datetime(today.year, today.month, today.day, 0,0,0)
+
+    # append the low or high time of the day
+    if lowtime:
+        time = datetime.min.time()
+    else:
+        time = datetime.max.time()
+
+    # determine how to translate the input value
+    if isinstance(value, datetime):
+        dt_val = value
+    elif isinstance(value, date):
+        dt_val = datetime.combine(value, time)
+    elif isinstance(value, str):
+        try:
+            # Expect format of DateType string to be (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
+            # allow 'xx' to denote 'every' similar to Cron "*"
+            msg = 'Translating string value="{}" to datetime (LowTime={})'.format(value, 
+                                                                                lowtime)
+            logger.debug(msg)
+
+            # default to today and the time period (low/high)
+            year, month, day = today.year, today.month, today.day
+            hour, minute, second = time.hour, time.minute, time.second
+
+            # start parsing the Time out, for later additional processing
+            dateparts = value.lower().split('-')
+
+            year = today.year if dateparts[0] == 'xxxx' else int(dateparts[0])
+            month = today.month if dateparts[1] == 'xx' else int(dateparts[1]) 
+
+            dateparts_day = dateparts[2].split(' ')
+
+            day = today.day if dateparts_day[0] == 'xx' else int(dateparts_day[0]) 
+
+            # attempt to parse out Time components
+            if len(dateparts_day) > 1:
+                timeparts = dateparts_day[1].split(':')
+                if len(timeparts) > 1:
+                    hour = now.hour if timeparts[0] == 'xx' else int(timeparts[0]) 
+                    minute = now.minute if timeparts[1] == 'xx' else int(timeparts[1]) 
+                    second = now.second + 1 if timeparts[2] == 'xx' else int(timeparts[2]) 
+
+            dt_val = datetime(year, month, day, hour, minute, second)
+            logger.debug('Datetime-> "{}"'.format(dt_val))
+        except Exception as e:
+            msg = 'Unable to parse date string "{}"'.format(value)
+            logger.error(msg, exc_info=e)
+            raise
+    else:
+        msg = 'UnknownType: Unable to parse date string "{}" for type "{}"'.format(value, 
+                                                                                type(value)
+                                                                            )
+        logger.error(msg)
+        raise TypeError(msg)
+
+    return dt_val
+
+def preroll_schedule(schedule_file: Optional[str]=None) -> List[ScheduleEntry]:
     """Return a listing of defined preroll schedules for searching/use
 
     Args:
@@ -172,7 +269,7 @@ def getPrerollSchedule(schedule_file:Optional[str]=None) -> List[ScheduleEntry]:
         FileNotFoundError: If no schedule config file exists
 
     Returns:
-        list: list of schedules (Dict: {Type, StartDate, EndDate, Path})
+        list: list of ScheduleEntries
     """
     default_files = ['preroll_schedules.yaml', 'preroll_schedules.yml']
 
@@ -199,8 +296,8 @@ def getPrerollSchedule(schedule_file:Optional[str]=None) -> List[ScheduleEntry]:
         contents = yaml.load(file, Loader=yaml.SafeLoader)
 
     today = date.today()
-    schedule = [] # type: List[ScheduleEntry]
-    for schedule_section in getYAMLSchema():
+    schedule : List[ScheduleEntry] = []
+    for schedule_section in schedule_types():
         if schedule_section == 'weekly':
             try:
                 use = contents[schedule_section]['enabled']
@@ -211,7 +308,7 @@ def getPrerollSchedule(schedule_file:Optional[str]=None) -> List[ScheduleEntry]:
                             path = contents[schedule_section][i]
 
                             if path:
-                                start, end = getWeekRange(today.year, i)
+                                start, end = week_range(today.year, i)
   
                                 entry = ScheduleEntry(type=schedule_section,
                                                     force=False,
@@ -222,7 +319,8 @@ def getPrerollSchedule(schedule_file:Optional[str]=None) -> List[ScheduleEntry]:
                                 schedule.append(entry)
                         except KeyError as ke:
                             # skip KeyError for missing Weeks
-                            msg = 'Key Value not found: "{}"->"{}", skipping week'.format(schedule_section, i)
+                            msg = 'Key Value not found: "{}"->"{}", skipping week'.format(schedule_section, 
+                                                                                        i)
                             logger.debug(msg)
                             pass
             except KeyError as ke:
@@ -240,7 +338,7 @@ def getPrerollSchedule(schedule_file:Optional[str]=None) -> List[ScheduleEntry]:
                             path = contents[schedule_section][month_abrev]    
 
                             if path:
-                                start, end = getMonthRange(today.year, i)
+                                start, end = month_range(today.year, i)
 
                                 entry = ScheduleEntry(type=schedule_section,
                                                     force=False,
@@ -251,7 +349,8 @@ def getPrerollSchedule(schedule_file:Optional[str]=None) -> List[ScheduleEntry]:
                                 schedule.append(entry)
                         except KeyError as ke:
                             # skip KeyError for missing Months
-                            msg = 'Key Value not found: "{}"->"{}", skipping month'.format(schedule_section, month_abrev)
+                            msg = 'Key Value not found: "{}"->"{}", skipping month'.format(schedule_section, 
+                                                                                            month_abrev)
                             logger.warning(msg)
                             pass
             except KeyError as ke:
@@ -274,8 +373,8 @@ def getPrerollSchedule(schedule_file:Optional[str]=None) -> List[ScheduleEntry]:
                                     force = False
                                     pass
                                 
-                                start = r['start_date']
-                                end = r['end_date']
+                                start = make_datetime(r['start_date'], lowtime=True)
+                                end = make_datetime(r['end_date'], lowtime=False)
 
                                 entry = ScheduleEntry(type=schedule_section,
                                                     force=force,
@@ -302,8 +401,10 @@ def getPrerollSchedule(schedule_file:Optional[str]=None) -> List[ScheduleEntry]:
                         if path:
                             entry = ScheduleEntry(type=schedule_section,
                                             force=False,
-                                            startdate=date(today.year, today.month, today.day),
-                                            enddate=date(today.year, today.month, today.day),
+                                            startdate=datetime(today.year, today.month, today.day,
+                                                                0, 0, 0),
+                                            enddate=datetime(today.year, today.month, today.day,
+                                                                23,59,59),
                                             path=path)
 
                             schedule.append(entry)
@@ -325,8 +426,10 @@ def getPrerollSchedule(schedule_file:Optional[str]=None) -> List[ScheduleEntry]:
                         if path:
                             entry = ScheduleEntry(type=schedule_section,
                                             force=False,
-                                            startdate=date(today.year, today.month, today.day),
-                                            enddate=date(today.year, today.month, today.day),
+                                            startdate=datetime(today.year, today.month, today.day,
+                                                             0, 0, 0),
+                                            enddate=datetime(today.year, today.month, today.day,
+                                                            23,59,59),
                                             path=path)
 
                             schedule.append(entry)
@@ -345,11 +448,10 @@ def getPrerollSchedule(schedule_file:Optional[str]=None) -> List[ScheduleEntry]:
 
     # Sort list so most recent Ranges appear first
     schedule.sort(reverse=True, key=lambda x:x.startdate)
-    #schedule.sort(reverse=False, key=lambda x:duration_seconds(x['startdate'], x['enddate']))
 
     return schedule
 
-def buildListingString(items:List[str], play_all:bool=False) -> str:
+def build_listing_string(items: List[str], play_all: bool=False) -> str:
     """Build the Plex formatted string of preroll paths
 
     Args:
@@ -368,23 +470,19 @@ def buildListingString(items:List[str], play_all:bool=False) -> str:
 
     return listing
 
-def getPrerollListing(schedule:List[ScheduleEntry], for_datetime:Optional[datetime]=None) -> str:
+def preroll_listing(schedule: List[ScheduleEntry], for_datetime: Optional[datetime]=None) -> str:
     """Return listing of preroll videos to be used by Plex
 
     Args:
         schedule (List[ScheduleEntry]):     List of schedule entries (See: getPrerollSchedule)
         for_datetime (datetime, optional):  Date to process pre-roll string for [Default: Today]
-                                            Useful if wanting to test what different schedules produce
+                                            Useful for simulating what different dates produce
 
     Returns:
         string: listing of preroll video paths to be used for Extras. CSV style: (;|,)
     """
     listing = ''
-    entries = getYAMLSchema()
-
-    # prep the storage lists
-    for y in getYAMLSchema():
-        entries[y] = []
+    entries = schedule_types()
 
     # determine which date to build the listing for
     if for_datetime:
@@ -398,22 +496,24 @@ def getPrerollListing(schedule:List[ScheduleEntry], for_datetime:Optional[dateti
     # process the schedule for the given date
     for entry in schedule:
         try:
-            entry_start = entry.startdate #['startdate']
-            entry_end = entry.enddate #['enddate']
+            entry_start = entry.startdate
+            entry_end = entry.enddate
             if not isinstance(entry_start, datetime):
                 entry_start = datetime.combine(entry_start, datetime.min.time())
             if not isinstance(entry_end, datetime):
                 entry_end = datetime.combine(entry_end, datetime.max.time())
 
-            msg = 'checking "{}" against: "{}" - "{}"'.format(check_datetime, entry_start, entry_end)
+            msg = 'checking "{}" against: "{}" - "{}"'.format(check_datetime, 
+                                                            entry_start, 
+                                                            entry_end)
             logger.debug(msg)
 
             if entry_start <= check_datetime <= entry_end:
-                entry_type = entry.type #['type']
-                entry_path = entry.path #['path']
+                entry_type = entry.type
+                entry_path = entry.path
                 entry_force = False
                 try:
-                    entry_force = entry.force #['force']
+                    entry_force = entry.force
                 except KeyError as ke:
                     # special case Optional, ignore
                     pass 
@@ -421,20 +521,19 @@ def getPrerollListing(schedule:List[ScheduleEntry], for_datetime:Optional[dateti
                 msg = 'Check PASS: Using "{}" - "{}"'.format(entry_start, entry_end)
                 logger.debug(msg)
 
-                if entry_path:  
+                if entry_path:
                     found = False
                     # check new schedule item against exist list
                     for e in entries[entry_type]:
                         duration_new = duration_seconds(entry_start, entry_end) 
-                        duration_curr = duration_seconds(e.startdate, e.enddate) #['startdate'], e['enddate'])
+                        duration_curr = duration_seconds(e.startdate, e.enddate)
                         
                         # only the narrowest timeframe should stay
                         # disregard if a force entry is there
-                        if duration_new < duration_curr and e.force != True: #['force'] != True:
+                        if duration_new < duration_curr and e.force != True:
                             entries[entry_type].remove(e)
-                            found = True
-                        else:
-                            found = True
+
+                        found = True
                         
                     # prep for use if New, or is a force Usage
                     if not found or entry_force == True:
@@ -459,11 +558,11 @@ def getPrerollListing(schedule:List[ScheduleEntry], for_datetime:Optional[dateti
         and not entries['monthly'] and not entries['weekly'] and not entries['date_range']:
         merged_list.extend([p.path for p in entries['default']])
 
-    listing = buildListingString(merged_list)
+    listing = build_listing_string(merged_list)
 
     return listing
 
-def savePrerollList(plex:PlexServer, preroll_listing:Union[str, List[str]]) -> None:
+def save_preroll_listing(plex: PlexServer, preroll_listing: Union[str, List[str]]) -> None:
     """Save Plex Preroll info to PlexServer settings
 
     Args:
@@ -472,7 +571,7 @@ def savePrerollList(plex:PlexServer, preroll_listing:Union[str, List[str]]) -> N
     """
     # if happend to send in an Iterable List, merge to a string
     if type(preroll_listing) is list:
-        preroll_listing = buildListingString(list(preroll_listing))
+        preroll_listing = build_listing_string(list(preroll_listing))
 
     msg = 'Attempting save of pre-rolls: "{}"'.format(preroll_listing)
     logger.debug(msg)
@@ -480,15 +579,16 @@ def savePrerollList(plex:PlexServer, preroll_listing:Union[str, List[str]]) -> N
     plex.settings.get('cinemaTrailersPrerollID').set(preroll_listing)    
     plex.settings.save()
 
-    msg = 'Saved Pre-Rolls: Server: "{}" Pre-Rolls: "{}"'.format(plex.friendlyName, preroll_listing)
+    msg = 'Saved Pre-Rolls: Server: "{}" Pre-Rolls: "{}"'.format(plex.friendlyName, 
+                                                                preroll_listing)
     logger.info(msg)
 
 if __name__ == '__main__':
-    args = getArguments()
+    args = arguments()
 
-    plexutil.setupLogger(args.log_config_file)
+    plexutil.init_logger(args.log_config_file)
 
-    cfg = plexutil.getPlexConfig(args.config_file)
+    cfg = plexutil.plex_config(args.config_file)
 
     # Initialize Session information
     sess = requests.Session()
@@ -509,13 +609,12 @@ if __name__ == '__main__':
         logger.error(msg, exc_info=e)
         raise e
 
-    schedule = getPrerollSchedule(args.schedule_file)
-    prerolls = getPrerollListing(schedule)
+    schedule = preroll_schedule(args.schedule_file)
+    prerolls = preroll_listing(schedule)
     
     if args.do_test_run:
         msg = 'Test Run of Plex Pre-Rolls: **Nothing being saved**\n{}\n'.format(prerolls)
         logger.debug(msg)
         print(msg)
     else:
-        savePrerollList(plex, prerolls)
-
+        save_preroll_listing(plex, prerolls)
