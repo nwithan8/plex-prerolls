@@ -32,6 +32,10 @@ date_range:
     - start_date: 2020-12-19
       end_date: 2020-12-26
       path: /path/to/video.mp4
+    # every year on Dec 25
+    - start_date: xxxx-12-25
+      end_date: xxxx-12-25
+      path: /path/to/holiday_video.mp4
 weekly:
   # If enabled, list any weeks of the year to have specific prerolls 1-52 (optional)
   # Done need to have all the week numbers; the script skips over missing entries

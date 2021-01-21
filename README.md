@@ -26,12 +26,13 @@ See [Installation & Setup](#install) section
 
 Schedule priority for a given Date:
 
-1. **misc**
-    - always_use - always includes in listing (append)
+1. **misc** \
+always_use - always includes in listing (append)
 
 2. **date_range** \
 Include listing for the specified Start/End date range that include the given Date \
 Range can be specified as a Date or DateTime \
+Advanced features to have recurring timeframes \
 **overrides usage of *week/month/default* listings
 
 3. **weekly** \
@@ -44,6 +45,8 @@ Include listing for the specified MONTH of the year for the given Date \
 
 5. **default** \
 Default listing used of none of above apply to the given Date
+
+Note: Script tries to find the closest matching range if multiple overlap at same time
 
 ---
 
@@ -60,11 +63,12 @@ git clone https://github.com/BrianLindner/plex-schedule-prerolls.git
 
 Requires:
 
-- Python 3.8+  [may work on 3.5+ but not tested]
+- Python 3.8+  [may work on 3.6+ but not tested]
+- See `requirements.txt` for Python modules and versions [link](requirements.txt)
+  - plexapi, configparser, pyyaml, etc.
 
-See `requirements.txt` for Python modules used [link](requirements.txt)
-
-Install Python requirements
+Install Python requirements \
+(highly recomend using <a href="https://docs.python.org/3/tutorial/venv.html" target="_blank">Virtual Environments</a> )
 
 ```sh
 pip install -r requirements.txt
@@ -78,7 +82,7 @@ Script checks for:
 - PlexAPI global config.ini
 - Custom location config.ini (see [Arguments](#arguments))
 
-(See: [plexapi.CONFIG](https://python-plexapi.readthedocs.io/en/latest/configuration.html) for more info)
+(See: <a href="https://python-plexapi.readthedocs.io/en/latest/configuration.html" target="_blank">plexapi.CONFIG</a> for more info)
 
 Rename `config.ini.sample` -> `config.ini` and update to your environment
 
@@ -91,6 +95,16 @@ server_token = <PLEX_TOKEN> # access token
 ```
 
 ### Create `preroll_schedules.yaml` file with desired schedule
+
+#### Date Range Section Scheduling
+
+Use it for *Day* or *Ranges of Dates* needs \
+Now with Time support! (optional)
+
+Formatting Supported:
+
+- Dates: yyyy-mm-dd
+- DateTime: yyyy-mm-dd hh:mm:ss  (24hr time format)
 
 Rename `preroll_schedules.yaml.sample` -> `preroll_schedules.yaml` and update for your environment
 
@@ -128,21 +142,7 @@ default:
   path: /path/to/file.mp4;/path/to/file.mp4
 ```
 
-#### Date Range Section
-
-Use it for *Day* or *Ranges of Time* needs \
-Now with Time support! (optional)
-
-Formatting Supported:
-
-- Dates: yyyy-mm-dd
-- DateTime: yyyy-mm-dd hh:mm:ss  (24hr time format)
-
-### (Optional) Config `logger.conf` to your needs
-
-See: [https://docs.python.org/3/howto/logging.html](https://docs.python.org/3/howto/logging.html)
-
----
+See [Advancecd Date Ranges](#advanced_date) for additional features
 
 ## Usage <a id="usage"></a>
 
@@ -152,7 +152,7 @@ See: [https://docs.python.org/3/howto/logging.html](https://docs.python.org/3/ho
 python schedule_preroll.py
 ```
 
-### Runtime Arguments <a id="arguments"></a>
+### Runtime Arguments <a id="arguments" ></a>
 
 - -v : version information
 - -h : help information
@@ -161,8 +161,8 @@ python schedule_preroll.py
 - -lc : location of custom logger.conf config file \
 See:
   - Sample [logger config](logging.conf)
-  - Logger usage [Examples](https://github.com/amilstead/python-logging-examples/blob/master/configuration/fileConfig/config.ini)
-  - Logging [Info](https://www.internalpointers.com/post/logging-python-sub-modules-and-configuration-files)
+  - Logger usage <a href="https://github.com/amilstead/python-logging-examples/blob/master/configuration/fileConfig/config.ini" target="_blank" >Examples</a>
+  - Logging <a href="https://www.internalpointers.com/post/logging-python-sub-modules-and-configuration-files" target="_blank">Doc Info</a>
 
 ```sh
 python schedule_preroll.py -h
@@ -193,7 +193,7 @@ python schedule_preroll.py \
 
 ---
 
-## Scheduling (Optional)
+## Scheduling Script (Optional) <a id="scheduling"></a>
 
 Add to system scheduler:
 
@@ -217,6 +217,58 @@ useful if running other scripts/commands, using venv encapsulation, customizing 
 0 0 * * * /path/to/schedule_preroll.sh >/dev/null 2>&1
 ```
 
+Schedule as frequently as needed for your environment and how specific and to your personal rotation schedule needs
+
+---
+
+## Advanced Date Range Section Scheduling <a id="advanced_date"></a> (Optional)
+
+Date Ranges with Recurring Timeframes \
+Useful for static dates or times where you want recurring preroll activity
+
+Examples:
+
+- Every Morning
+- Yearly holidays (Halloween, New Years, Independence)
+- Birthdays, Anniversaries
+
+For either Start and/or End date of range \
+Substitute "xx" for date/times to schedule for "any" \
+Substitute "xxxx" for recurring year
+
+- xxxx-xx-01 - Every first of month
+- xxxx-xx-xx - Every day
+- xxxx-xx-xx 08:00:00 - every day from 8am
+- xxxx-01-01 - Every year on Jan 1 (new years day)
+- xxxx-xx-01 xx:00:00 - 
+
+if using Time, still must have a full datetime pattern (ex: hour, minute, second hh:mm:ss)
+
+```yaml
+#every July 4
+- start_date: xxxx-07-04
+  end_date: xxxx-07-04
+  path: /path/to/video.mp4
+# every first of month, all day
+- start_date: xxxx-xx-01
+  end_date: xxxx-xx-01
+  path: /path/to/video.mp4
+# 8-9 am every day
+- start_date: xxxx-xx-xx 08:00:00
+  end_date: xxxx-xx-xx 08:59:59
+  path: /path/to/video.mp4
+
+```
+
+Note: Detailed time based schedules benefit from increased running of the Python script for frequently - ex: Hourly \
+(See: [Scheduling Script](#scheduling) section)
+
+---
+
+## Config `logger.conf` to your needs (Optional)
+
+See: <a href="https://docs.python.org/3/howto/logging.html" target="_blank"><https://docs.python.org/3/howto/logging.html></a>
+
 ---
 
 ## Wrapping Up
@@ -227,4 +279,4 @@ useful if running other scripts/commands, using venv encapsulation, customizing 
 
 ## Shout out to places to get Pre-Roll
 
-[https://prerolls.video](https://prerolls.video)
+- <a href="https://prerolls.video" target="_blank"><https://prerolls.video></a>
