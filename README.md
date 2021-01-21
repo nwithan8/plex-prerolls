@@ -240,7 +240,6 @@ Substitute "xxxx" for recurring year
 - xxxx-xx-xx - Every day
 - xxxx-xx-xx 08:00:00 - every day from 8am
 - xxxx-01-01 - Every year on Jan 1 (new years day)
-- xxxx-xx-01 xx:00:00 - 
 
 if using Time, still must have a full datetime pattern (ex: hour, minute, second hh:mm:ss)
 
