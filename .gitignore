@@ -36,6 +36,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+typings/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -67,7 +68,7 @@ test/
 *.pot
 
 # Logging items
-#/log/ 
+#/log/
 *.log
 *.log.*
 
