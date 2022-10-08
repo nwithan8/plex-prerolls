@@ -41,6 +41,7 @@ from datetime import date, datetime, timedelta
 from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
 import requests
+import urllib3
 import yaml
 from plexapi.server import PlexServer
 
@@ -194,7 +195,9 @@ def duration_seconds(start: Union[date, datetime], end: Union[date, datetime]) -
 
     delta = end - start
 
-    logger.debug(f"duration_second[] Start: {start} End: {end} Duration: {delta.total_seconds()}")
+    logger.debug(
+        "duration_second[] Start: %s End: %s Duration: %s}", start, end, delta.total_seconds()
+    )
     return delta.total_seconds()
 
 
@@ -234,8 +237,7 @@ def make_datetime(value: Union[str, date, datetime], lowtime: bool = True) -> da
         try:
             # Expect format of DateType string to be (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
             # allow 'xx' to denote 'every' similar to Cron "*"
-            msg = f'Translating string value="{value}" to datetime (LowTime={lowtime})'
-            logger.debug(msg)
+            logger.debug('Translating string value="%s" to datetime (LowTime=%s)', value, lowtime)
 
             # default to today and the time period (low/high)
             year, month, day = today.year, today.month, today.day
@@ -260,14 +262,13 @@ def make_datetime(value: Union[str, date, datetime], lowtime: bool = True) -> da
                     second = now.second + 1 if timeparts[2] == "xx" else int(timeparts[2])
 
             dt_val = datetime(year, month, day, hour, minute, second)
-            logger.debug(f'Datetime-> "{dt_val}"')
+            logger.debug("Datetime-> '%s'", dt_val)
         except Exception as e:
-            msg = f'Unable to parse date string "{value}"'
-            logger.error(msg, exc_info=e)
+            logger.error('Unable to parse date string "%s"', value, exc_info=e)
             raise
     else:
-        msg = f'UnknownType: Unable to parse date string "{value}" for type "{type(value)}"'
-        logger.error(msg)
+        msg = 'UnknownType: Unable to parse date string "%s" for type "%s"'
+        logger.error(msg, value, type(value))
         raise TypeError(msg)
 
     return dt_val
@@ -303,9 +304,8 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
     # if we still cant find a schedule file, we abort
     if not filename:
         filestr = '" / "'.join(default_files)
-        msg = f'Missing schedule file: "{filestr}"'
-        logger.critical(msg)
-        raise FileNotFoundError(msg)
+        logger.critical('Missing schedule file: "%s"', filestr)
+        raise FileNotFoundError(filestr)
 
     with open(filename, "r") as file:
         contents = yaml.load(file, Loader=yaml.SafeLoader)  # type: ignore
@@ -334,14 +334,16 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
                                 )
 
                                 schedule.append(entry)
-                        except KeyError as ke:
+                        except KeyError:
                             # skip KeyError for missing Weeks
-                            msg = f'Key Value not found: "{schedule_section}"->"{i}", skipping week'
-                            logger.debug(msg)
+                            logger.debug(
+                                'Key Value not found: "%s"->"%s", skipping week',
+                                schedule_section,
+                                i,
+                            )
                             pass
             except KeyError as ke:
-                msg = f'Key Value not found in "{schedule_section}" section'
-                logger.error(msg, exc_info=ke)
+                logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
                 raise
         elif schedule_section == "monthly":
             try:
@@ -365,14 +367,16 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
                                 )
 
                                 schedule.append(entry)
-                        except KeyError as ke:
+                        except KeyError:
                             # skip KeyError for missing Months
-                            msg = 'Key Value not found: "{schedule_section}"->"{month_abrev}", skipping month'
-                            logger.warning(msg)
+                            logger.warning(
+                                'Key Value not found: "%s"->"%s", skipping month',
+                                schedule_section,
+                                month_abrev,
+                            )
                             pass
             except KeyError as ke:
-                msg = f'Key Value not found in "{schedule_section}" section'
-                logger.error(msg, exc_info=ke)
+                logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
                 raise
         elif schedule_section == "date_range":
             try:
@@ -403,12 +407,10 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
 
                                 schedule.append(entry)
                         except KeyError as ke:
-                            msg = f'Key Value not found for entry: "{entry}"'  # type: ignore
-                            logger.error(msg, exc_info=ke)
+                            logger.error('Key Value not found for entry: "%s"', entry, exc_info=ke)  # type: ignore
                             raise
             except KeyError as ke:
-                msg = f'Key Value not found in "{schedule_section}" section'
-                logger.error(msg, exc_info=ke)
+                logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
                 raise
         elif schedule_section == "misc":
             try:
@@ -432,8 +434,7 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
                         logger.error(msg, exc_info=ke)
                         raise
             except KeyError as ke:
-                msg = f'Key Value not found in "{schedule_section}" section'
-                logger.error(msg, exc_info=ke)
+                logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
                 raise
         elif schedule_section == "default":
             try:
@@ -453,12 +454,10 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
 
                             schedule.append(entry)
                     except KeyError as ke:
-                        msg = f'Key Value not found for entry: "{entry}"'  # type: ignore
-                        logger.error(msg, exc_info=ke)
+                        logger.error('Key Value not found for entry: "%s"', entry, exc_info=ke)  # type: ignore
                         raise
             except KeyError as ke:
-                msg = f'Key Value not found in "{schedule_section}" section'
-                logger.error(msg, exc_info=ke)
+                logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
                 raise
         else:
             msg = f'Unknown schedule_section "{schedule_section}" detected'
@@ -524,8 +523,9 @@ def preroll_listing(schedule: List[ScheduleEntry], for_datetime: Optional[dateti
             if not isinstance(entry_end, datetime):  # type: ignore
                 entry_end = datetime.combine(entry_end, datetime.max.time())
 
-            msg = f'checking "{check_datetime}" against: "{entry_start}" - "{entry_end}"'
-            logger.debug(msg)
+            logger.debug(
+                'checking "%s" against: "%s" - "%s"', check_datetime, entry_start, entry_end
+            )
 
             if entry_start <= check_datetime <= entry_end:
                 entry_type = entry.type
@@ -533,12 +533,11 @@ def preroll_listing(schedule: List[ScheduleEntry], for_datetime: Optional[dateti
                 entry_force = False
                 try:
                     entry_force = entry.force
-                except KeyError as ke:
+                except KeyError:
                     # special case Optional, ignore
                     pass
 
-                msg = f'Check PASS: Using "{entry_start}" - "{entry_end}"'
-                logger.debug(msg)
+                logger.debug('Check PASS: Using "%s" - "%s"', entry_start, entry_end)
 
                 if entry_path:
                     found = False
@@ -558,8 +557,7 @@ def preroll_listing(schedule: List[ScheduleEntry], for_datetime: Optional[dateti
                     if not found or entry_force == True:
                         entries[entry_type].append(entry)
         except KeyError as ke:
-            msg = f'KeyError with entry "{entry}"'
-            logger.error(msg, exc_info=ke)
+            logger.error('KeyError with entry "%s"', entry, exc_info=ke)
             raise
 
     # Build the merged output based or order of Priority
@@ -596,14 +594,12 @@ def save_preroll_listing(plex: PlexServer, preroll_listing: Union[str, List[str]
     if isinstance(preroll_listing, list):
         preroll_listing = build_listing_string(list(preroll_listing))
 
-    msg = f'Attempting save of pre-rolls: "{preroll_listing}"'
-    logger.debug(msg)
+    logger.debug('Attempting save of pre-rolls: "%s"', preroll_listing)
 
     plex.settings.get("cinemaTrailersPrerollID").set(preroll_listing)  # type: ignore
-    plex.settings.save()
+    plex.settings.save()  # type: ignore
 
-    msg = f'Saved Pre-Rolls: Server: "{plex.friendlyName}" Pre-Rolls: "{preroll_listing}"'  # type: ignore
-    logger.info(msg)
+    logger.info('Saved Pre-Rolls: Server: "%s" Pre-Rolls: "%s"', plex.friendlyName, preroll_listing)  # type: ignore
 
 
 if __name__ == "__main__":
@@ -622,15 +618,14 @@ if __name__ == "__main__":
     # from OpenSSL.
     if sess.verify is False:
         # Disable the warning that the request is insecure, we know that...
-        import urllib3
+        # import urllib3
 
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # type: ignore
 
     try:
         plex = PlexServer(cfg["PLEX_URL"], cfg["PLEX_TOKEN"], session=sess)
     except Exception as e:
-        msg = "Error connecting to Plex"
-        logger.error(msg, exc_info=e)
+        logger.error("Error connecting to Plex", exc_info=e)
         raise e
 
     schedule = preroll_schedule(args.schedule_file)
