@@ -5,20 +5,22 @@ Raises:
     FileNotFoundError: [description]
     KeyError: [description]
 """
-import os
-import sys
 import logging
 import logging.config
-from typing import Optional, Dict, List
+import os
+import sys
 from configparser import ConfigParser
-from plexapi.server import PlexServer, CONFIG
+from typing import Dict, Optional
+
+from plexapi.server import CONFIG  # type: ignore
 
 logger = logging.getLogger(__name__)
 
 filename = os.path.basename(sys.argv[0])
 SCRIPT_NAME = os.path.splitext(filename)[0]
 
-def plex_config(config_file: Optional[str]='') -> Dict[str,str]:
+
+def plex_config(config_file: Optional[str] = "") -> Dict[str, str]:
     """Return Plex Config paramaters for connection info {PLEX_URL, PLEX_TOKEN}\n
     Attempts to use one of either:\n
     * supplier path/to/config file (INI Format)
@@ -36,58 +38,56 @@ def plex_config(config_file: Optional[str]='') -> Dict[str,str]:
         dict: Dict of config params {PLEX_URL, PLEX_TOKEN}
     """
 
-    cfg = {} # type: Dict[str, str]
-    plex_url = ''
-    plex_token = ''
-    filename = ''
+    cfg: dict[str, str] = {}
+    plex_url = ""
+    plex_token = ""
+    filename = ""
     use_local_config = False
     use_plexapi_config = False
 
     # Look for a local Config.ini file, use settings if present
     local_config = ConfigParser()
 
-    if config_file == None or config_file == '':
-        filename = 'config.ini'
+    if config_file == None or config_file == "":
+        filename = "config.ini"
     else:
         filename = str(config_file)
 
-    #try reading a local file
+    # try reading a local file
     local_config.read(filename)
 
-    if len(local_config.sections()) > 0:  #len(found_config) > 0:
+    if len(local_config.sections()) > 0:  # len(found_config) > 0:
         # if local config.ini file found, try to use local first
-        if local_config.has_section('auth'):
-            try: 
-                server = local_config['auth']
-                plex_url = server['server_baseurl']
-                plex_token = server['server_token']
+        if local_config.has_section("auth"):
+            try:
+                server = local_config["auth"]
+                plex_url = server["server_baseurl"]
+                plex_token = server["server_token"]
 
                 if len(plex_url) > 1 and len(plex_token) > 1:
                     use_local_config = True
             except KeyError as e:
-                msg = 'Key Value not found {}'
-                logger.error(msg, exc_info=e)
+                logger.error("Key Value not found", exc_info=e)
                 raise e
         else:
-            msg = '[auth] section not found in LOCAL config.ini file'
+            msg = "[auth] section not found in LOCAL config.ini file"
             logger.error(msg)
             raise KeyError(msg)
 
-    if not use_local_config and len(CONFIG.sections()) > 0:
+    if not use_local_config and len(CONFIG.sections()) > 0:  # type: ignore
         # use PlexAPI Default ~/.config/plexapi/config.ini OR from PLEXAPI_CONFIG_PATH
         # IF not manually set locally in local Config.ini above
         # See https://python-plexapi.readthedocs.io/en/latest/configuration.html
-        if CONFIG.has_section('auth'):
+        if CONFIG.has_section("auth"):  # type: ignore
             try:
-                server = CONFIG.data['auth']
-                plex_url = server.get('server_baseurl')
-                plex_token = server.get('server_token')
+                server = CONFIG.data["auth"]  # type: ignore
+                plex_url: str = server.get("server_baseurl")  # type: ignore
+                plex_token: str = server.get("server_token")  # type: ignore
 
                 if len(plex_url) > 1 and len(plex_token) > 1:
                     use_plexapi_config = True
             except KeyError as e:
-                msg = 'Key Value not found'
-                logger.error(msg, exc_info=e)
+                logger.error("Key Value not found", exc_info=e)
                 raise e
         else:
             msg = "[auth] section not found in PlexAPI MAIN config.ini file"
@@ -95,14 +95,15 @@ def plex_config(config_file: Optional[str]='') -> Dict[str,str]:
             raise KeyError(msg)
 
     if not use_local_config and not use_plexapi_config:
-        msg = 'ConfigFile Error: No Plex config information found {server_baseurl, server_token}'
+        msg = "ConfigFile Error: No Plex config information found [server_baseurl, server_token]"
         logger.error(msg)
-        raise FileNotFoundError(msg) 
+        raise FileNotFoundError(msg)
 
-    cfg['PLEX_URL'] = plex_url
-    cfg['PLEX_TOKEN']= plex_token
+    cfg["PLEX_URL"] = plex_url
+    cfg["PLEX_TOKEN"] = plex_token
 
     return cfg
+
 
 def init_logger(log_config: str) -> None:
     """load and configure a program logger using a supplier logging configuration file \n
@@ -122,18 +123,16 @@ def init_logger(log_config: str) -> None:
         except FileNotFoundError as e_fnf:
             # Assume this is related to a missing Log Folder
             # Try to create
-            if e_fnf.filename and e_fnf.filename[-3:] == 'log':
+            if e_fnf.filename and e_fnf.filename[-3:] == "log":
                 logfile = e_fnf.filename
                 logdir = os.path.dirname(logfile)
 
                 if not os.path.exists(logdir):
                     try:
-                        msg = 'Creating log folder "{}"'.format(logdir)
-                        logger.debug(msg)
+                        logger.debug('Creating log folder "%s"', logdir)
                         os.makedirs(logdir, exist_ok=True)
                     except Exception as e:
-                        msg = 'Error creating log folder "{}"'.format(logdir)
-                        logger.error(msg, exc_info=e)
+                        logger.error('Error creating log folder "%s"', logdir, exc_info=e)
                         raise e
             elif logger.handlers:
                 # if logger config loaded, but some file error happened
@@ -144,13 +143,11 @@ def init_logger(log_config: str) -> None:
 
                         if not os.path.exists(logdir):
                             try:
-                                msg = 'Creating log folder "{}"'.format(logdir)
-                                logger.debug(msg)
+                                logger.debug('Creating log folder "%s"', logdir)
 
                                 os.makedirs(logdir, exist_ok=True)
                             except Exception as e:
-                                msg = 'Error creating log folder "{}"'.format(logdir)
-                                logger.error(msg, exc_info=e)
+                                logger.error('Error creating log folder "%s"', logdir, exc_info=e)
                                 raise e
             else:
                 # not sure the issue, raise the exception
@@ -160,11 +157,15 @@ def init_logger(log_config: str) -> None:
             logging.config.fileConfig(log_config, disable_existing_loggers=False)
 
     else:
-        msg = 'Logging Config file "{}" not available, will be using defaults'.format(log_config)
-        logger.debug(msg)
+        logger.debug('Logging Config file "%s" not available, will be using defaults', log_config)
 
-if __name__ == '__main__':
-    msg = 'Script not meant to be run directly, please import into other scripts.\n\n' + \
-           'usage:\nimport {}'.format(SCRIPT_NAME) + '\n' + \
-           'cfg = {}.getPlexConfig()'.format(SCRIPT_NAME) + '\n'
+
+if __name__ == "__main__":
+    msg = (
+        "Script not meant to be run directly, please import into other scripts.\n\n"
+        + f"usage:\nimport {SCRIPT_NAME}"
+        + "\n"
+        + f"cfg = {SCRIPT_NAME}.getPlexConfig()"
+        + "\n"
+    )
     logger.error(msg)
