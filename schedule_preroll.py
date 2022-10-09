@@ -597,7 +597,11 @@ def save_preroll_listing(plex: PlexServer, preroll_listing: Union[str, List[str]
     logger.debug('Attempting save of pre-rolls: "%s"', preroll_listing)
 
     plex.settings.get("cinemaTrailersPrerollID").set(preroll_listing)  # type: ignore
-    plex.settings.save()  # type: ignore
+    try:
+        plex.settings.save()  # type: ignore
+    except Exception as e:
+        logger.error('Unable to save Pre-Rolls to Server: "%s"', plex.friendlyName, exc_info=e)  # type: ignore
+        raise e
 
     logger.info('Saved Pre-Rolls: Server: "%s" Pre-Rolls: "%s"', plex.friendlyName, preroll_listing)  # type: ignore
 
