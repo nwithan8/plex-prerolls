@@ -1,0 +1,414 @@
+{
+  "monthly": {
+    "required": false,
+    "type": "dict",
+    "schema": {
+      "enabled": {
+        "required": true,
+        "type": "boolean"
+      },
+      "jan": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "feb": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "mar": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "apr": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "may": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "jun": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "jul": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "aug": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "sep": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "oct": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "nov": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "dec": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "weekly": {
+    "required": false,
+    "type": "dict",
+    "schema": {
+      "enabled": {
+        "required": true,
+        "type": "boolean"
+      },
+      "1": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "2": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "3": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "4": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "5": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "6": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "7": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "8": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "9": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "10": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "11": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "12": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "13": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "14": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "15": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "16": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "17": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "18": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "19": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "20": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "21": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "22": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "23": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "24": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "25": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "26": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "27": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "28": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "29": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "30": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "31": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "32": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "33": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "34": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "35": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "36": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "37": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "38": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "39": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "40": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "41": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "42": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "43": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "44": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "45": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "46": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "47": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "48": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "49": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "50": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "51": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      },
+      "52": {
+        "required": false,
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "date_range": {
+    "required": false,
+    "type": "dict",
+    "schema": {
+      "enabled": {
+        "required": true,
+        "type": "boolean"
+      },
+      "ranges": {
+        "required": true,
+        "type": "list",
+        "schema": {
+          "type": "dict",
+          "schema": {
+            "start_date": {
+              "required": true,
+              "type": [
+                "string",
+                "date"
+              ]
+            },
+            "end_date": {
+              "required": true,
+              "type": [
+                "string",
+                "date"
+              ]
+            },
+            "path": {
+              "required": true,
+              "type": "string"
+            },
+            "force": {
+              "required": false,
+              "type": "boolean",
+              "nullable": true
+            }
+          }
+        }
+      }
+    }
+  },
+  "misc": {
+    "required": false,
+    "type": "dict",
+    "schema": {
+      "enabled": {
+        "required": true,
+        "type": "boolean"
+      },
+      "always_use": {
+        "required": true,
+        "type": "string",
+        "nullable": true
+      }
+    }
+  },
+  "default": {
+    "required": false,
+    "type": "dict",
+    "schema": {
+      "enabled": {
+        "required": true,
+        "type": "boolean"
+      },
+      "path": {
+        "required": true,
+        "type": "string",
+        "nullable": true
+      }
+    }
+  }
+}

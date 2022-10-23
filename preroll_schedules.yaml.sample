@@ -1,22 +1,22 @@
 ---
 # all Key items must be in lowercase
 # all PATH entries will be case sensitive based on your Environment (Linux, Windows)
-monthly: 
+monthly:
   # If enabled, List out each month (lowercase;3-char abreviation) (optional)
   # dont have to have all the months here, script will skip but log a Warning
   enabled: Yes
   jan: /path/to/video.mp4
-  feb: 
-  mar: 
-  apr: 
-  May: /path/to/video.mp4
-  jun: 
-  jul: 
-  aug: 
+  feb:
+  mar:
+  apr:
+  may: /path/to/video.mp4
+  jun:
+  jul:
+  aug:
   sep: /path/to/video.mp4;/path/to/video.mp4
-  oct: 
-  nov: 
-  dec: 
+  oct:
+  nov:
+  dec:
 date_range:
   # If enabled, use a list of various date ranges/timeframes for different lists of pre-rolls
   # list must be under ranges:
@@ -38,11 +38,12 @@ date_range:
       path: /path/to/holiday_video.mp4
 weekly:
   # If enabled, list any weeks of the year to have specific prerolls 1-52 (optional)
-  # Done need to have all the week numbers; the script skips over missing entries
+  # Dont need to have all the week numbers; the script skips over missing entries
+  # each week number must be surrounded by quotes
   enabled: No
-  1: 
-  2: /path/to/video.mkv
-  52: 
+  "1":
+  "2": /path/to/video.mkv
+  "52":
 misc:
   # If enabled, additional items for preroll selecton processing
   # always_use: If enabled, always include these video files in pre-role listing

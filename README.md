@@ -131,9 +131,9 @@ date_range:
       path: /path/to/video.mp4
 weekly:
   enabled: (yes/no)
-  1: /path/to/file(s)
+  "1": /path/to/file(s)
   ...
-  52: /path/to/file(s)
+  "52": /path/to/file(s)
 misc:
   enabled: (yes/no)
   always_use: /path/to/file(s)

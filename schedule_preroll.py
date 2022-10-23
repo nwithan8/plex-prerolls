@@ -33,6 +33,8 @@ Raises:
     FileNotFoundError: [description]
 """
 
+
+import json
 import logging
 import os
 import sys
@@ -43,10 +45,12 @@ from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 import requests
 import urllib3
 import yaml
+from cerberus import Validator  # type: ignore
+from cerberus.schema import SchemaError
 from plexapi.server import PlexServer
 
 # import local util modules
-import plexutil
+from util import plexutil
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +77,7 @@ def arguments() -> Namespace:
         argparse.Namespace: Namespace object
     """
     description = "Automate scheduling of pre-roll intros for Plex"
-    version = "0.10.1"
+    version = "0.12.0"
 
     config_default = "./config.ini"
     log_config_default = "./logging.conf"
@@ -274,6 +278,82 @@ def make_datetime(value: Union[str, date, datetime], lowtime: bool = True) -> da
     return dt_val
 
 
+def schedulefile_contents(schedule_filename: Optional[str]) -> dict[str, any]:  # type: ignore
+    """Returns a contents of the provided YAML file and validates
+
+    Args:
+        schedule_filename (string, optional]): schedule file to load, will use defaults if not specified
+
+    Raises:
+        Validation Errors
+
+    Returns:
+        YAML Contents: YAML structure of Dict[str, Any]
+    """
+    default_files = ["preroll_schedules.yaml", "preroll_schedules.yml"]
+
+    filename = None
+    if schedule_filename not in ("", None):
+        if os.path.exists(str(schedule_filename)):
+            filename = schedule_filename
+        else:
+            msg = f'Pre-roll Schedule file "{schedule_filename}" not found'
+            logger.error(msg)
+            raise FileNotFoundError(msg)
+    else:
+        for f in default_files:
+            if os.path.exists(f):
+                filename = f
+                break
+
+    # if we still cant find a schedule file, we abort
+    if not filename:
+        filestr = '" / "'.join(default_files)
+        logger.error('Missing schedule file: "%s"', filestr)
+        raise FileNotFoundError(filestr)
+
+    schema_filename = os.path.abspath("util/schedulefile_schema.json")
+
+    # make sure the Schema validation file is available
+    if not os.path.exists(str(schema_filename)):
+        msg = f'Pre-roll Schema Validation file "{schema_filename}" not found'
+        logger.error(msg)
+        raise FileNotFoundError(msg)
+
+    # Open Schedule file
+    try:
+        with open(filename, "r", encoding="utf8") as file:
+            contents = yaml.load(file, Loader=yaml.SafeLoader)  # type: ignore
+    except yaml.YAMLError as ye:
+        logger.error("YAML Error: %s", filename, exc_info=ye)
+        raise
+    except Exception as e:
+        logger.error(e, exc_info=e)
+        raise
+
+    # Validate the loaded YAML data against the required schema
+    try:
+        with open(schema_filename, "r", encoding="utf8") as schema_file:
+            schema = json.loads(schema_file.read())
+
+        v = Validator(schema)  # type: ignore
+    except json.JSONDecodeError as je:
+        logger.error("JSON Error: %s", os.path.abspath("schedule_schema.json"), exc_info=je)
+        raise
+    except SchemaError as se:
+        logger.error("Schema Error %s", os.path.abspath("schedule_schema.json"), exc_info=se)
+        raise
+    except Exception as e:
+        logger.error(e, exc_info=e)
+        raise
+
+    if not v.validate(contents):  # type: ignore
+        logger.error("Preroll-Schedule YAML Validation Error: %s", v.errors)  # type: ignore
+        raise yaml.YAMLError(f"Preroll-Schedule YAML Validation Error: {v.errors}")  # type: ignore
+
+    return contents
+
+
 def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]:
     """Return a listing of defined preroll schedules for searching/use
 
@@ -286,41 +366,26 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
     Returns:
         list: list of ScheduleEntries
     """
-    default_files = ["preroll_schedules.yaml", "preroll_schedules.yml"]
 
-    filename = None
-    if schedule_file not in ("", None):
-        if os.path.exists(str(schedule_file)):
-            filename = schedule_file
-        else:
-            msg = f'Pre-roll Schedule file "{schedule_file}" not found'
-            raise FileNotFoundError(msg)
-    else:
-        for f in default_files:
-            if os.path.exists(f):
-                filename = f
-                break
-
-    # if we still cant find a schedule file, we abort
-    if not filename:
-        filestr = '" / "'.join(default_files)
-        logger.critical('Missing schedule file: "%s"', filestr)
-        raise FileNotFoundError(filestr)
-
-    with open(filename, "r") as file:
-        contents = yaml.load(file, Loader=yaml.SafeLoader)  # type: ignore
+    contents = schedulefile_contents(schedule_file)  # type: ignore
 
     today = date.today()
     schedule: List[ScheduleEntry] = []
     for schedule_section in schedule_types():
+        # test if section exists
+        try:
+            section_contents = contents[schedule_section]  # type: ignore
+        except KeyError:
+            logger.info('"%s" section not included in schedule file', schedule_section)
+            # continue to other sections
+            continue
+
         if schedule_section == "weekly":
             try:
-                use = contents[schedule_section]["enabled"]
-
-                if use:
+                if section_contents["enabled"]:
                     for i in range(1, 53):
                         try:
-                            path = contents[schedule_section][i]
+                            path = str(section_contents[i])  # type: ignore
 
                             if path:
                                 start, end = week_range(today.year, i)
@@ -341,19 +406,16 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
                                 schedule_section,
                                 i,
                             )
-                            pass
             except KeyError as ke:
                 logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
                 raise
         elif schedule_section == "monthly":
             try:
-                use = contents[schedule_section]["enabled"]
-
-                if use:
+                if section_contents["enabled"]:
                     for i in range(1, 13):
                         month_abrev = date(today.year, i, 1).strftime("%b").lower()
                         try:
-                            path = contents[schedule_section][month_abrev]
+                            path = str(section_contents[month_abrev])  # type: ignore
 
                             if path:
                                 start, end = month_range(today.year, i)
@@ -374,32 +436,29 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
                                 schedule_section,
                                 month_abrev,
                             )
-                            pass
             except KeyError as ke:
                 logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
                 raise
         elif schedule_section == "date_range":
             try:
-                use = contents[schedule_section]["enabled"]
-                if use:
-                    for r in contents[schedule_section]["ranges"]:
+                if section_contents["enabled"]:
+                    for r in section_contents["ranges"]:  # type: ignore
                         try:
-                            path = r["path"]
+                            path = str(r["path"])  # type: ignore
 
                             if path:
                                 try:
-                                    force = r["force"]
+                                    force = r["force"]  # type: ignore
                                 except KeyError as ke:
                                     # special case Optional, ignore
                                     force = False
-                                    pass
 
-                                start = make_datetime(r["start_date"], lowtime=True)
-                                end = make_datetime(r["end_date"], lowtime=False)
+                                start = make_datetime(r["start_date"], lowtime=True)  # type: ignore
+                                end = make_datetime(r["end_date"], lowtime=False)  # type: ignore
 
                                 entry = ScheduleEntry(
                                     type=schedule_section,
-                                    force=force,
+                                    force=force,  # type: ignore
                                     startdate=start,
                                     enddate=end,
                                     path=path,
@@ -409,15 +468,20 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
                         except KeyError as ke:
                             logger.error('Key Value not found for entry: "%s"', entry, exc_info=ke)  # type: ignore
                             raise
+                        except TypeError as te:
+                            logger.error('Type Error "%s" Entry: "%s"', te, entry, exc_info=te)  # type: ignore
+                            raise
+                        except Exception as e:
+                            logger.error('Exception: %s %s Entry: "%s"', type(e), e, entry, exc_info=e)  # type: ignore
+                            raise
             except KeyError as ke:
                 logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
                 raise
         elif schedule_section == "misc":
             try:
-                use = contents[schedule_section]["enabled"]
-                if use:
+                if section_contents["enabled"]:
                     try:
-                        path = contents[schedule_section]["always_use"]
+                        path = str(section_contents["always_use"])  # type: ignore
 
                         if path:
                             entry = ScheduleEntry(
@@ -438,10 +502,9 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
                 raise
         elif schedule_section == "default":
             try:
-                use = contents[schedule_section]["enabled"]
-                if use:
+                if section_contents["enabled"]:
                     try:
-                        path = contents[schedule_section]["path"]
+                        path = str(section_contents["path"])  # type: ignore
 
                         if path:
                             entry = ScheduleEntry(
@@ -480,6 +543,10 @@ def build_listing_string(items: List[str], play_all: bool = False) -> str:
     Returns:
         string: CSV Listing (, or ;) based on play_all param of preroll video paths
     """
+
+    if len(items) == 0:
+        return ";"
+
     if play_all:
         # use , to play all entries
         listing = ",".join(items)

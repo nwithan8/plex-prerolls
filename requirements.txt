@@ -2,3 +2,4 @@ plexapi==4.13.*
 configparser==5.0.*
 requests==2.25.*
 pyyaml==5.3.*
+cerberus==1.3.*
