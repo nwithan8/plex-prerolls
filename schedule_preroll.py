@@ -297,17 +297,19 @@ def schedulefile_contents(schedule_filename: Optional[str]) -> dict[str, any]:  
     if schedule_filename not in ("", None):
         if os.path.exists(str(schedule_filename)):
             filename = schedule_filename
+
+            logger.debug('using specified schedule file "%s"', filename)
         else:
             msg = f'Pre-roll Schedule file "{schedule_filename}" not found'
             logger.error(msg)
             raise FileNotFoundError(msg)
     else:
         for f in default_files:
-            if os.path.exists(f):
-                filename = f
+            default_file = os.path.join(script_dir, f)
+            if os.path.exists(default_file):
+                filename = default_file
+                logger.debug('using default schedule file "%s"', filename)
                 break
-
-    logger.debug('using schedule file "%s"', filename)
 
     # if we still cant find a schedule file, we abort
     if not filename:
@@ -315,7 +317,7 @@ def schedulefile_contents(schedule_filename: Optional[str]) -> dict[str, any]:  
         logger.error('Missing schedule file: "%s"', filestr)
         raise FileNotFoundError(filestr)
 
-    schema_filename = script_dir + "/" + "util/schedulefile_schema.json"
+    schema_filename = os.path.join(script_dir, "util/schedulefile_schema.json")
 
     logger.debug('using schema validation file "%s"', schema_filename)
 
