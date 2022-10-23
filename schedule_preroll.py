@@ -54,8 +54,9 @@ from util import plexutil
 
 logger = logging.getLogger(__name__)
 
-filename = os.path.basename(sys.argv[0])
-SCRIPT_NAME = os.path.splitext(filename)[0]
+script_filename = os.path.basename(sys.argv[0])
+script_name = os.path.splitext(script_filename)[0]
+script_dir = os.path.dirname(__file__)
 
 
 class ScheduleEntry(NamedTuple):
@@ -314,7 +315,7 @@ def schedulefile_contents(schedule_filename: Optional[str]) -> dict[str, any]:  
         logger.error('Missing schedule file: "%s"', filestr)
         raise FileNotFoundError(filestr)
 
-    schema_filename = os.path.relpath("util/schedulefile_schema.json")
+    schema_filename = script_dir + "/" + "util/schedulefile_schema.json"
 
     logger.debug('using schema validation file "%s"', schema_filename)
 
