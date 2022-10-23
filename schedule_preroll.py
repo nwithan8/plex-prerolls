@@ -306,13 +306,17 @@ def schedulefile_contents(schedule_filename: Optional[str]) -> dict[str, any]:  
                 filename = f
                 break
 
+    logger.debug('using schedule file "%s"', filename)
+
     # if we still cant find a schedule file, we abort
     if not filename:
         filestr = '" / "'.join(default_files)
         logger.error('Missing schedule file: "%s"', filestr)
         raise FileNotFoundError(filestr)
 
-    schema_filename = "util/schedulefile_schema.json"
+    schema_filename = os.path.relpath("util/schedulefile_schema.json")
+
+    logger.debug('using schema validation file "%s"', schema_filename)
 
     # make sure the Schema validation file is available
     if not os.path.exists(str(schema_filename)):
@@ -338,10 +342,10 @@ def schedulefile_contents(schedule_filename: Optional[str]) -> dict[str, any]:  
 
         v = Validator(schema)  # type: ignore
     except json.JSONDecodeError as je:
-        logger.error("JSON Error: %s", os.path.abspath("schedule_schema.json"), exc_info=je)
+        logger.error("JSON Error: %s", schema_filename, exc_info=je)
         raise
     except SchemaError as se:
-        logger.error("Schema Error %s", os.path.abspath("schedule_schema.json"), exc_info=se)
+        logger.error("Schema Error %s", schema_filename, exc_info=se)
         raise
     except Exception as e:
         logger.error(e, exc_info=e)
@@ -376,7 +380,7 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
         try:
             section_contents = contents[schedule_section]  # type: ignore
         except KeyError:
-            logger.info('"%s" section not included in schedule file', schedule_section)
+            logger.info('"%s" section not included in schedule file; skipping', schedule_section)
             # continue to other sections
             continue
 
