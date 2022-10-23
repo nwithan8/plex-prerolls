@@ -1,0 +1,19 @@
+# .github/workflows/publish-release-manual.yml
+name: Publish release (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The tag to publish
+        required: true
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: refs/tags/${{ github.event.inputs.tag }}
+      - name: Publish release
+        uses: eloquent/github-release-action@v3
