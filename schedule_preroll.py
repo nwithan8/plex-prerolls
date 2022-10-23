@@ -312,7 +312,7 @@ def schedulefile_contents(schedule_filename: Optional[str]) -> dict[str, any]:  
         logger.error('Missing schedule file: "%s"', filestr)
         raise FileNotFoundError(filestr)
 
-    schema_filename = os.path.abspath("util/schedulefile_schema.json")
+    schema_filename = "util/schedulefile_schema.json"
 
     # make sure the Schema validation file is available
     if not os.path.exists(str(schema_filename)):
