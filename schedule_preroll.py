@@ -78,7 +78,7 @@ def arguments() -> Namespace:
         argparse.Namespace: Namespace object
     """
     description = "Automate scheduling of pre-roll intros for Plex"
-    version = "0.12.2"
+    version = "0.12.3"
 
     config_default = "./config.ini"
     log_config_default = "./logging.conf"
