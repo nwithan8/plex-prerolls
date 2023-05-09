@@ -33,7 +33,6 @@ Raises:
     FileNotFoundError: [description]
 """
 
-
 import json
 import logging
 import os
