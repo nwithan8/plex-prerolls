@@ -77,7 +77,7 @@ def arguments() -> Namespace:
         argparse.Namespace: Namespace object
     """
     description = "Automate scheduling of pre-roll intros for Plex"
-    version = "0.12.3"
+    version = "0.12.4"
 
     config_default = "./config.ini"
     log_config_default = "./logging.conf"
@@ -422,9 +422,12 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
                         month_abrev = date(today.year, i, 1).strftime("%b").lower()
                         try:
                             path = str(section_contents[month_abrev])  # type: ignore
+                            logger.debug('Month: "%s" Path: "%s"', month_abrev, path)
 
-                            if path:
+                            if path and path != "None":
                                 start, end = month_range(today.year, i)
+
+                                logger.debug('Month "%s" Start:%s End:%s', month_abrev, start, end)
 
                                 entry = ScheduleEntry(
                                     type=schedule_section,
@@ -508,9 +511,11 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
                 raise
         elif schedule_section == "default":
             try:
+                logger.debug("Checking Default Path Options")
                 if section_contents["enabled"]:
                     try:
                         path = str(section_contents["path"])  # type: ignore
+                        logger.debug('Enabling Default Selections: "%s"', path)
 
                         if path:
                             entry = ScheduleEntry(
@@ -535,6 +540,10 @@ def preroll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]
 
     # Sort list so most recent Ranges appear first
     schedule.sort(reverse=True, key=lambda x: x.startdate)
+
+    logger.debug("***START Schedule Set to be used***")
+    logger.debug(schedule)
+    logger.debug("***END Schedule Set to be used***")
 
     return schedule
 
@@ -610,7 +619,9 @@ def preroll_listing(schedule: List[ScheduleEntry], for_datetime: Optional[dateti
                     # special case Optional, ignore
                     pass
 
-                logger.debug('Check PASS: Using "%s" - "%s"', entry_start, entry_end)
+                logger.info(
+                    'Check PASS: Using "%s" - "%s" - "%s"', entry_start, entry_end, entry_path
+                )
 
                 if entry_path:
                     found = False
