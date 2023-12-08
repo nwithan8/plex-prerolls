@@ -102,10 +102,10 @@ docker run -d \
 
 #### Paths and Environment Variables
 
-| Path      | Description                                                                         |
-|-----------|-------------------------------------------------------------------------------------|
-| `/config` | Path to config files (`config.ini` and `schedule.yaml` should be in this directory) |
-| `/logs`   | Path to log files (`schedule_preroll.log` will be in this directory)                |
+| Path      | Description                                                                          |
+|-----------|--------------------------------------------------------------------------------------|
+| `/config` | Path to config files (`config.ini` and `schedules.yaml` should be in this directory) |
+| `/logs`   | Path to log files (`schedule_preroll.log` will be in this directory)                 |
 
 | Environment Variable | Description                                                       |
 |----------------------|-------------------------------------------------------------------|

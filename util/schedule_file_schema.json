@@ -371,9 +371,9 @@
               "required": true,
               "type": "string"
             },
-            "force": {
+            "weight": {
               "required": false,
-              "type": "boolean",
+              "type": "integer",
               "nullable": true
             }
           }
@@ -392,6 +392,11 @@
       "always_use": {
         "required": true,
         "type": "string",
+        "nullable": true
+      },
+      "random_count": {
+        "required": false,
+        "type": "integer",
         "nullable": true
       }
     }

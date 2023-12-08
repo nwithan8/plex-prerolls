@@ -32,23 +32,23 @@ Raises:
     ConfigError: [description]
     FileNotFoundError: [description]
 """
-
+import enum
 import json
 import logging
 import os
+import random
 import sys
 from argparse import ArgumentParser, Namespace
 from datetime import date, datetime, timedelta
-from typing import Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import List, NamedTuple, Optional, Tuple, Union
 
 import requests
-import urllib3
+import urllib3  # type: ignore
 import yaml
 from cerberus import Validator  # type: ignore
 from cerberus.schema import SchemaError
 from plexapi.server import PlexServer
 
-# import local util modules
 from util import plexutil
 
 logger = logging.getLogger(__name__)
@@ -62,11 +62,25 @@ class ScheduleEntry(NamedTuple):
     type: str
     start_date: datetime
     end_date: datetime
-    force: bool
     path: str
+    weight: int
 
 
-ScheduleType = Dict[str, List[ScheduleEntry]]
+class ScheduleType(enum.Enum):
+    default = "default"
+    monthly = "monthly"
+    weekly = "weekly"
+    date_range = "date_range"
+    misc = "misc"
+
+
+def schedule_types() -> list[str]:
+    """Return a list of Schedule Types
+
+    Returns:
+        List[ScheduleType]: List of Schedule Types
+    """
+    return [_enum.value for _enum in ScheduleType]
 
 
 def arguments() -> Namespace:
@@ -125,22 +139,6 @@ def arguments() -> Namespace:
     return args
 
 
-def schedule_types() -> ScheduleType:
-    """Return the main types of schedules to be used for storage processing
-
-    Returns:
-        ScheduleType: Dict of main schema items
-    """
-    schema: ScheduleType = {
-        "default": [],
-        "monthly": [],
-        "weekly": [],
-        "date_range": [],
-        "misc": [],
-    }
-    return schema
-
-
 def week_range(year: int, week_num: int) -> Tuple[datetime, datetime]:
     """Return the starting/ending date range of a given year/week
 
@@ -158,7 +156,7 @@ def week_range(year: int, week_num: int) -> Tuple[datetime, datetime]:
     start = datetime.combine(start, datetime.min.time())
     end = datetime.combine(end, datetime.max.time())
 
-    return (start, end)
+    return start, end
 
 
 def month_range(year: int, month_num: int) -> Tuple[datetime, datetime]:
@@ -179,7 +177,7 @@ def month_range(year: int, month_num: int) -> Tuple[datetime, datetime]:
     start = datetime.combine(start, datetime.min.time())
     end = datetime.combine(end, datetime.max.time())
 
-    return (start, end)
+    return start, end
 
 
 def duration_seconds(start: Union[date, datetime], end: Union[date, datetime]) -> float:
@@ -360,6 +358,171 @@ def schedule_file_contents(schedule_filename: Optional[str]) -> dict[str, any]: 
     return contents
 
 
+def prep_weekly_schedule(contents: dict[str, any]) -> List[ScheduleEntry]:
+    """
+    Collect all weekly ScheduleEntries that are valid for the current datetime
+    """
+    schedule_entries: List[ScheduleEntry] = []
+
+    if not contents.get("enabled", False):
+        return schedule_entries
+
+    today = date.today()
+    for i in range(1, 53):
+        try:
+            path = str(contents[i])  # type: ignore
+
+            if path:
+                start, end = week_range(today.year, i)
+
+                entry = ScheduleEntry(
+                    type=ScheduleType.weekly.value,
+                    start_date=start,
+                    end_date=end,
+                    path=path,
+                    weight=contents.get("weight", 1),
+                )
+
+                schedule_entries.append(entry)
+        except KeyError:
+            # skip KeyError for missing Weeks
+            pass
+
+    return schedule_entries
+
+
+def prep_monthly_schedule(contents: dict[str, any]) -> List[ScheduleEntry]:
+    """
+    Collect all monthly ScheduleEntries that are valid for the current datetime
+    """
+    schedule_entries: List[ScheduleEntry] = []
+
+    if not contents.get("enabled", False):
+        return schedule_entries
+
+    # Get the entry for the current month
+    today = date.today()
+    today_month_abbrev = date(today.year, today.month, 1).strftime("%b").lower()
+    path = contents.get(today_month_abbrev, None)
+    if not path:
+        return schedule_entries
+
+    start, end = month_range(today.year, today.month)
+
+    logger.debug(f'Parsing paths for current month: {today_month_abbrev}')
+
+    entry = ScheduleEntry(
+        type=ScheduleType.monthly.value,
+        start_date=start,
+        end_date=end,
+        path=path,
+        weight=contents.get("weight", 1),
+    )
+
+    schedule_entries.append(entry)
+
+    return schedule_entries
+
+
+def prep_date_range_schedule(contents: dict[str, any]) -> List[ScheduleEntry]:
+    """
+    Collect all date_range ScheduleEntries that are valid for the current datetime
+    """
+    schedule_entries: List[ScheduleEntry] = []
+
+    if not contents.get("enabled", False):
+        return schedule_entries
+
+    for _range in contents.get('ranges', []):
+        path = _range.get("path", None)
+        if not path:
+            logger.error(f'Missing "path" entry in date_range: {_range}')
+            continue
+
+        start = make_datetime(_range["start_date"], lowtime=True)  # type: ignore
+        end = make_datetime(_range["end_date"], lowtime=False)  # type: ignore
+
+        # Skip if the current date is not within the range
+        now = datetime.now()
+        if start > now or end < now:
+            logger.debug(f'Skipping date_range out of range: {_range}')
+            continue
+
+        entry = ScheduleEntry(
+            type=ScheduleType.date_range.value,
+            start_date=start,
+            end_date=end,
+            path=path,
+            weight=_range.get("weight", 1),
+        )
+
+        schedule_entries.append(entry)
+
+    return schedule_entries
+
+
+def prep_misc_schedule(contents: dict[str, any]) -> List[ScheduleEntry]:
+    """
+    Collect all misc ScheduleEntries
+    """
+    schedule_entries: List[ScheduleEntry] = []
+
+    if not contents.get("enabled", False):
+        return schedule_entries
+
+    today = date.today()
+    path = contents.get("always_use", None)
+    if not path:
+        return schedule_entries
+
+    logger.debug(f'Parsing "misc" selections: {path}')
+
+    random_count = contents.get("random_count", -1)
+    if random_count > -1:
+        path_items = path.split(";")
+        path_items = random.sample(population=path_items, k=random_count)
+        path = ";".join(path_items)
+
+    entry = ScheduleEntry(
+        type=ScheduleType.misc.value,
+        start_date=datetime(today.year, today.month, today.day, 0, 0, 0),
+        end_date=datetime(today.year, today.month, today.day, 23, 59, 59),
+        path=path,
+        weight=contents.get("weight", 1),
+    )
+    schedule_entries.append(entry)
+
+    return schedule_entries
+
+
+def prep_default_schedule(contents: dict[str, any]) -> List[ScheduleEntry]:
+    """
+    Collect all default ScheduleEntries
+    """
+    schedule_entries: List[ScheduleEntry] = []
+
+    if not contents.get("enabled", False):
+        return schedule_entries
+
+    today = date.today()
+    path = contents.get("path", None)
+    if not path:
+        return schedule_entries
+
+    logger.debug(f'Parsing "default" selections: {path}')
+
+    entry = ScheduleEntry(
+        type=ScheduleType.default.value,
+        start_date=datetime(today.year, today.month, today.day, 0, 0, 0),
+        end_date=datetime(today.year, today.month, today.day, 23, 59, 59),
+        path=path,
+        weight=contents.get("weight", 1),
+    )
+    schedule_entries.append(entry)
+
+    return schedule_entries
+
+
 def pre_roll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry]:
     """Return a listing of defined pre_roll schedules for searching/use
 
@@ -375,177 +538,49 @@ def pre_roll_schedule(schedule_file: Optional[str] = None) -> List[ScheduleEntry
 
     contents = schedule_file_contents(schedule_file)  # type: ignore
 
-    today = date.today()
-    schedule: List[ScheduleEntry] = []
-    for schedule_section in schedule_types():
-        # test if section exists
-        try:
-            section_contents = contents[schedule_section]  # type: ignore
-        except KeyError:
-            logger.info('"%s" section not included in schedule file; skipping', schedule_section)
+    schedule_entries: List[ScheduleEntry] = []
+
+    for schedule_type in schedule_types():
+
+        section_contents = contents.get(schedule_type, None)
+        if not section_contents:
+            logger.info('"%s" section not included in schedule file; skipping', schedule_type)
             # continue to other sections
             continue
 
-        if schedule_section == "weekly":
-            try:
-                if section_contents["enabled"]:
-                    for i in range(1, 53):
-                        try:
-                            path = str(section_contents[i])  # type: ignore
+        # Write a switch statement to handle each schedule type
+        match schedule_type:
+            case ScheduleType.weekly.value:
+                weekly_schedule_entries = prep_weekly_schedule(section_contents)
+                schedule_entries.extend(weekly_schedule_entries)
 
-                            if path:
-                                start, end = week_range(today.year, i)
+            case ScheduleType.monthly.value:
+                monthly_schedule_entries = prep_monthly_schedule(section_contents)
+                schedule_entries.extend(monthly_schedule_entries)
 
-                                entry = ScheduleEntry(
-                                    type=schedule_section,
-                                    force=False,
-                                    start_date=start,
-                                    end_date=end,
-                                    path=path,
-                                )
+            case ScheduleType.date_range.value:
+                date_range_schedule_entries = prep_date_range_schedule(section_contents)
+                schedule_entries.extend(date_range_schedule_entries)
 
-                                schedule.append(entry)
-                        except KeyError:
-                            # skip KeyError for missing Weeks
-                            logger.debug(
-                                'Key Value not found: "%s"->"%s", skipping week',
-                                schedule_section,
-                                i,
-                            )
-            except KeyError as ke:
-                logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
-                raise
-        elif schedule_section == "monthly":
-            try:
-                if section_contents["enabled"]:
-                    for i in range(1, 13):
-                        month_abrev = date(today.year, i, 1).strftime("%b").lower()
-                        try:
-                            path = str(section_contents[month_abrev])  # type: ignore
-                            logger.debug('Month: "%s" Path: "%s"', month_abrev, path)
+            case ScheduleType.misc.value:
+                misc_schedule_entries = prep_misc_schedule(section_contents)
+                schedule_entries.extend(misc_schedule_entries)
 
-                            if path and path != "None":
-                                start, end = month_range(today.year, i)
+            case ScheduleType.default.value:
+                default_schedule_entries = prep_default_schedule(section_contents)
+                schedule_entries.extend(default_schedule_entries)
 
-                                logger.debug('Month "%s" Start:%s End:%s', month_abrev, start, end)
-
-                                entry = ScheduleEntry(
-                                    type=schedule_section,
-                                    force=False,
-                                    start_date=start,
-                                    end_date=end,
-                                    path=path,
-                                )
-
-                                schedule.append(entry)
-                        except KeyError:
-                            # skip KeyError for missing Months
-                            logger.warning(
-                                'Key Value not found: "%s"->"%s", skipping month',
-                                schedule_section,
-                                month_abrev,
-                            )
-            except KeyError as ke:
-                logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
-                raise
-        elif schedule_section == "date_range":
-            try:
-                if section_contents["enabled"]:
-                    for r in section_contents["ranges"]:  # type: ignore
-                        try:
-                            path = str(r["path"])  # type: ignore
-
-                            if path:
-                                try:
-                                    force = r["force"]  # type: ignore
-                                except KeyError as ke:
-                                    # special case Optional, ignore
-                                    force = False
-
-                                start = make_datetime(r["start_date"], lowtime=True)  # type: ignore
-                                end = make_datetime(r["end_date"], lowtime=False)  # type: ignore
-
-                                entry = ScheduleEntry(
-                                    type=schedule_section,
-                                    force=force,  # type: ignore
-                                    start_date=start,
-                                    end_date=end,
-                                    path=path,
-                                )
-
-                                schedule.append(entry)
-                        except KeyError as ke:
-                            logger.error('Key Value not found for entry: "%s"', entry, exc_info=ke)  # type: ignore
-                            raise
-                        except TypeError as te:
-                            logger.error('Type Error "%s" Entry: "%s"', te, entry, exc_info=te)  # type: ignore
-                            raise
-                        except Exception as e:
-                            logger.error('Exception: %s %s Entry: "%s"', type(e), e, entry, exc_info=e)  # type: ignore
-                            raise
-            except KeyError as ke:
-                logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
-                raise
-        elif schedule_section == "misc":
-            try:
-                if section_contents["enabled"]:
-                    try:
-                        path = str(section_contents["always_use"])  # type: ignore
-
-                        if path:
-                            entry = ScheduleEntry(
-                                type=schedule_section,
-                                force=False,
-                                start_date=datetime(today.year, today.month, today.day, 0, 0, 0),
-                                end_date=datetime(today.year, today.month, today.day, 23, 59, 59),
-                                path=path,
-                            )
-
-                            schedule.append(entry)
-                    except KeyError as ke:
-                        msg = f'Key Value not found for entry: "{entry}"'  # type: ignore
-                        logger.error(msg, exc_info=ke)
-                        raise
-            except KeyError as ke:
-                logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
-                raise
-        elif schedule_section == "default":
-            try:
-                logger.debug("Checking Default Path Options")
-                if section_contents["enabled"]:
-                    try:
-                        path = str(section_contents["path"])  # type: ignore
-                        logger.debug('Enabling Default Selections: "%s"', path)
-
-                        if path:
-                            entry = ScheduleEntry(
-                                type=schedule_section,
-                                force=False,
-                                start_date=datetime(today.year, today.month, today.day, 0, 0, 0),
-                                end_date=datetime(today.year, today.month, today.day, 23, 59, 59),
-                                path=path,
-                            )
-
-                            schedule.append(entry)
-                    except KeyError as ke:
-                        logger.error('Key Value not found for entry: "%s"', entry, exc_info=ke)  # type: ignore
-                        raise
-            except KeyError as ke:
-                logger.error('Key Value not found in "%s" section', schedule_section, exc_info=ke)
-                raise
-        else:
-            msg = f'Unknown schedule_section "{schedule_section}" detected'
-            logger.error(msg)
-            raise ValueError(msg)
+            case _:
+                logger.error('Unknown schedule_type "%s" detected', schedule_type)
 
     # Sort list so most recent Ranges appear first
-    schedule.sort(reverse=True, key=lambda x: x.start_date)
+    schedule_entries.sort(reverse=True, key=lambda x: x.start_date)
 
     logger.debug("***START Schedule Set to be used***")
-    logger.debug(schedule)
+    logger.debug(schedule_entries)
     logger.debug("***END Schedule Set to be used***")
 
-    return schedule
+    return schedule_entries
 
 
 def build_listing_string(items: List[str], play_all: bool = False) -> str:
@@ -559,32 +594,31 @@ def build_listing_string(items: List[str], play_all: bool = False) -> str:
         string: CSV Listing (, or ;) based on play_all param of pre_roll video paths
     """
 
-    if len(items) == 0:
-        return ";"
+    if not items:
+        return ""
 
     if play_all:
         # use , to play all entries
-        listing = ",".join(items)
-    else:
-        # use ; to play random selection
-        listing = ";".join(items)
+        return ",".join(items)
 
-    return listing
+    return ";".join(items)
 
 
-def pre_roll_listing(schedule: List[ScheduleEntry], for_datetime: Optional[datetime] = None) -> str:
+def pre_roll_listing(schedule_entries: List[ScheduleEntry], for_datetime: Optional[datetime] = None) -> str:
     """Return listing of pre_roll videos to be used by Plex
 
     Args:
-        schedule (List[ScheduleEntry]):     List of schedule entries (See: getPrerollSchedule)
+        schedule_entries (List[ScheduleEntry]):     List of schedule entries (See: getPrerollSchedule)
         for_datetime (datetime, optional):  Date to process pre-roll string for [Default: Today]
                                             Useful for simulating what different dates produce
 
     Returns:
         string: listing of pre_roll video paths to be used for Extras. CSV style: (;|,)
     """
-    listing = ""
-    entries = schedule_types()
+    entries: list[str] = []
+    default_entry_needed = True
+
+    _schedule_types = schedule_types()
 
     # determine which date to build the listing for
     if for_datetime:
@@ -596,73 +630,33 @@ def pre_roll_listing(schedule: List[ScheduleEntry], for_datetime: Optional[datet
         check_datetime = datetime.now()
 
     # process the schedule for the given date
-    for entry in schedule:
-        try:
-            entry_start = entry.start_date
-            entry_end = entry.end_date
-            if not isinstance(entry_start, datetime):  # type: ignore
-                entry_start = datetime.combine(entry_start, datetime.min.time())
-            if not isinstance(entry_end, datetime):  # type: ignore
-                entry_end = datetime.combine(entry_end, datetime.max.time())
+    for entry in schedule_entries:
+        entry_start = entry.start_date
+        if not isinstance(entry_start, datetime):  # type: ignore
+            entry_start = datetime.combine(entry_start, datetime.min.time())
 
-            logger.debug(
-                'checking "%s" against: "%s" - "%s"', check_datetime, entry_start, entry_end
-            )
+        entry_end = entry.end_date
+        if not isinstance(entry_end, datetime):  # type: ignore
+            entry_end = datetime.combine(entry_end, datetime.max.time())
 
-            if entry_start <= check_datetime <= entry_end:
-                entry_type = entry.type
-                entry_path = entry.path
-                entry_force = False
-                try:
-                    entry_force = entry.force
-                except KeyError:
-                    # special case Optional, ignore
-                    pass
+        logger.debug(
+            'checking "%s" against: "%s" - "%s"', check_datetime, entry_start, entry_end
+        )
 
-                logger.info(
-                    'Check PASS: Using "%s" - "%s" - "%s"', entry_start, entry_end, entry_path
-                )
+        # If current schedule entry is not valid for the current date, skip it
+        # This shouldn't be needed, as ScheduleEntries are only added up to this point if valid for the current datetime
+        if entry_start > check_datetime or entry_end < check_datetime:
+            continue
 
-                if entry_path:
-                    found = False
-                    # check new schedule item against exist list
-                    for e in entries[entry_type]:
-                        duration_new = duration_seconds(entry_start, entry_end)
-                        duration_curr = duration_seconds(e.start_date, e.end_date)
+        if entry.type != ScheduleType.default.value:  # Non-default entry, so don't need to add default entry
+            default_entry_needed = False
+            for _ in range(entry.weight):  # Add entry to list multiple times based on weight
+                entries.append(entry.path)
+        else:  # Default entry, only add if no other entries have been added
+            if default_entry_needed:
+                entries.append(entry.path)  # Default will only be added once (no weight)
 
-                        # only the narrowest timeframe should stay
-                        # disregard if a force entry is there
-                        if duration_new < duration_curr and e.force != True:
-                            entries[entry_type].remove(e)
-
-                        found = True
-
-                    # prep for use if New, or is a force Usage
-                    if not found or entry_force == True:
-                        entries[entry_type].append(entry)
-        except KeyError as ke:
-            logger.error('KeyError with entry "%s"', entry, exc_info=ke)
-            raise
-
-    # Build the merged output based or order of Priority
-    merged_list = []
-    if entries["misc"]:
-        merged_list.extend([p.path for p in entries["misc"]])  # type: ignore
-    if entries["date_range"]:
-        merged_list.extend([p.path for p in entries["date_range"]])  # type: ignore
-    if entries["weekly"] and not entries["date_range"]:
-        merged_list.extend([p.path for p in entries["weekly"]])  # type: ignore
-    if entries["monthly"] and not entries["weekly"] and not entries["date_range"]:
-        merged_list.extend([p.path for p in entries["monthly"]])  # type: ignore
-    if (
-            entries["default"]
-            and not entries["monthly"]
-            and not entries["weekly"]
-            and not entries["date_range"]
-    ):
-        merged_list.extend([p.path for p in entries["default"]])  # type: ignore
-
-    listing = build_listing_string(merged_list)
+    listing = build_listing_string(items=entries)
 
     return listing
 
@@ -716,8 +710,8 @@ if __name__ == "__main__":
         logger.error("Error connecting to Plex", exc_info=e)
         raise e
 
-    schedule = pre_roll_schedule(args.schedule_file)
-    pre_rolls = pre_roll_listing(schedule)
+    schedule_entries = pre_roll_schedule(args.schedule_file)
+    pre_rolls = pre_roll_listing(schedule_entries=schedule_entries)
 
     if args.do_test_run:
         msg = f"Test Run of Plex Pre-Rolls: **Nothing being saved**\n{pre_rolls}\n"

@@ -12,6 +12,7 @@
 misc:
   enabled: true
   always_use: /path/to/video.mp4 # If enabled, always include these video files in pre-role listing
+  random_count: 5 # If provided, randomly select this many videos from the list rather than all of them
 
 # Schedule prerolls by date and time frames
 date_range:
@@ -21,15 +22,19 @@ date_range:
     - start_date: 2020-01-01 # Jan 1st, 2020
       end_date: 2020-01-02 # Jan 2nd, 2020
       path: /path/to/video.mp4
+      weight: 2 # Add these paths to the list twice (make up greater percentage of prerolls - more likely to be selected)
     - start_date: xxxx-07-04 # Every year on July 4th
       end_date: xxxx-07-04 # Every year on July 4th
       path: /path/to/video.mp4
+      weight: 1
     - start_date: xxxx-xx-02 # Every year on the 2nd of every month
       end_date: xxxx-xx-03 # Every year on the 3rd of every month
       path: /path/to/video.mp4
+      weight: 1
     - start_date: xxxx-xx-xx 08:00:00 # Every day at 8am
       end_date: xxxx-xx-xx 09:30:00 # Every day at 9:30am
       path: /path/to/holiday_video.mp4
+      weight: 1
 
 # Schedule prerolls by week of the year
 weekly:
