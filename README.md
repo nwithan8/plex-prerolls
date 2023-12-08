@@ -1,171 +1,51 @@
-# Schedule Plex server related Pre-roll intro videos
+# Plex Preroll Scheduler
 
-A helper script to automate management of Plex pre-rolls. \
-Define when you want different pre-rolls to play throughout the year.
+A script to automate management of Plex pre-rolls.
 
-Ideas include:
+Define when you want different pre-rolls to play throughout the year. For example:
 
 - Holiday pre-roll rotations
 - Special occasions
-- Summer/Winter/Seasonal rotations
+- Seasonal rotations
 - Breaking up the monotony
 - Keeping your family on their toes!
 
-Simple steps:
-
-> 1. Config the schedule
-> 2. Schedule script on server
-> 3. ...
-> 4. Profit!
-
-See [Installation & Setup](#install) section
-
 ---
 
-## Schedule Rules
+## Installation and Usage
 
-Schedule priority for a given Date:
+### Run Script Directly
 
-1. **misc** \
-always_use - always includes in listing (append)
+#### Requirements
 
-2. **date_range** \
-Include listing for the specified Start/End date range that include the given Date \
-Range can be specified as a Date or DateTime \
-Advanced features to have recurring timeframes \
-**overrides usage of *week/month/default* listings
+- Python 3.8+
 
-3. **weekly** \
-Include listing for the specified WEEK of the year for the given Date \
-  **override usage of *month/default* listings
-
-4. **monthly** \
-Include listing for the specified MONTH of the year for the given Date \
-**overrides usage of *default* listings
-
-5. **default** \
-Default listing used of none of above apply to the given Date
-
-Note: Script tries to find the closest matching range if multiple overlap at same time
-
----
-
-## Installation & Setup <a id="install"></a>
-
-Grab a copy of the code
+Clone the repo:
 
 ```sh
-cd /path/to/your/location
-git clone https://github.com/BrianLindner/plex-schedule-prerolls.git
+git clone https://github.com/nwithan8/plex-schedule-prerolls.git
 ```
 
-### Install Requirements <a id="requirements"></a>
-
-Requires:
-
-- Python 3.8+  [may work on 3.6+ but not tested]
-- See `requirements.txt` for Python modules and versions [link](requirements.txt)
-  - plexapi, configparser, pyyaml, etc.
-
-Install Python requirements \
-(highly recomend using <a href="https://docs.python.org/3/tutorial/venv.html" target="_blank">Virtual Environments</a> )
+Install Python requirements:
 
 ```sh
 pip install -r requirements.txt
 ```
 
-### Create `config.ini` file with Plex connection information
+Copy `config.ini.sample` to `config.ini` and complete the `[auth]` section with your Plex server information.
 
-Script checks for:
+Copy `schedules.yaml.sample` to `schedules.yaml` and [edit your schedule](#schedule-rules).
 
-- local ./config.ini (See: [Sample](config.ini.sample))
-- PlexAPI global config.ini
-- Custom location config.ini (see [Arguments](#arguments))
-
-(See: <a href="https://python-plexapi.readthedocs.io/en/latest/configuration.html" target="_blank">plexapi.CONFIG</a> for more info)
-
-Rename `config.ini.sample` -> `config.ini` and update to your environment
-
-Example `config.ini`
-
-```ini
-[auth]
-server_baseurl = http://127.0.0.1:32400 # your plex server url
-server_token = <PLEX_TOKEN> # access token
-```
-
-### Create `preroll_schedules.yaml` file with desired schedule
-
-#### Date Range Section Scheduling
-
-Use it for *Day* or *Ranges of Dates* needs \
-Now with Time support! (optional)
-
-Formatting Supported:
-
-- Dates: yyyy-mm-dd
-- DateTime: yyyy-mm-dd hh:mm:ss  (24hr time format)
-
-Rename `preroll_schedules.yaml.sample` -> `preroll_schedules.yaml` and update for your environment
-
-Example YAML config layout (See: [Sample](preroll_schedules.yaml.sample) for more info)
-
-```yaml
----
-monthly:
-  enabled: (yes/no)
-  jan: /path/to/file.mp4;/path/to/file.mp4
-  ...
-  dec: /path/to/file.mp4;/path/to/file.mp4
-date_range:
-  enabled: (yes/no)
-  ranges:
-    - start_date: 2020-01-01
-      end_date: 2020-01-01
-      path: /path/to/video.mp4
-    - start_date: 2020-07-03
-      end_date: 2020-07-05
-      path: /path/to/video.mp4
-    - start_date: 2020-12-19
-      end_date: 2020-12-26
-      path: /path/to/video.mp4
-weekly:
-  enabled: (yes/no)
-  "1": /path/to/file(s)
-  ...
-  "52": /path/to/file(s)
-misc:
-  enabled: (yes/no)
-  always_use: /path/to/file(s)
-default:
-  enabled: (yes/no)
-  path: /path/to/file.mp4;/path/to/file.mp4
-```
-
-See [Advancecd Date Ranges](#advanced_date) for additional features
-
-## Usage <a id="usage"></a>
-
-### Default Usage
+Run the script:
 
 ```sh
 python schedule_preroll.py
 ```
 
-### Runtime Arguments <a id="arguments" ></a>
-
-- -v : version information
-- -h : help information
-- -c : config.ini (local or PlexAPI system central) for Connection Info (see [config.ini.sample](config.ini.sample))
-- -s : preroll_schedules.yaml for various scheduling information (see [spreroll_schedules.yaml.sample](preroll_schedules.yaml.sample))
-- -lc : location of custom logger.conf config file \
-See:
-  - Sample [logger config](logging.conf)
-  - Logger usage <a href="https://github.com/amilstead/python-logging-examples/blob/master/configuration/fileConfig/config.ini" target="_blank" >Examples</a>
-  - Logging <a href="https://www.internalpointers.com/post/logging-python-sub-modules-and-configuration-files" target="_blank">Doc Info</a>
+#### Advanced Usage
 
 ```sh
-python schedule_preroll.py -h
+$ python schedule_preroll.py -h
 
 usage: schedule_preroll.py [-h] [-v] [-l LOG_CONFIG_FILE] [-c CONFIG_FILE] [-s SCHEDULE_FILE]
 
@@ -179,100 +59,134 @@ optional arguments:
   -c CONFIG_FILE, --config-path CONFIG_FILE
                         Path to Config.ini to use for Plex Server info. [Default: ./config.ini]
   -s SCHEDULE_FILE, --schedule-path SCHEDULE_FILE
-                        Path to pre-roll schedule file (YAML) to be use. [Default: ./preroll_schedules.yaml]
+                        Path to pre-roll schedule file (YAML) to be use. [Default: ./schedules.yaml]
 ```
 
-### Runtime Arguments Example
+##### Example
 
 ```sh
 python schedule_preroll.py \
     -c path/to/custom/config.ini \
-    -s path/to/custom/preroll_schedules.yaml \
+    -s path/to/custom/schedules.yaml \
     -lc path/to/custom/logger.conf
 ```
 
+### Run as Docker Container
+
+#### Requirements
+
+- Docker
+
+#### Docker Compose
+
+Complete the provided `docker-compose.yml` file and run:
+
+```sh
+docker-compose up -d
+```
+
+#### Docker CLI
+
+```sh
+docker run -d \
+  --name=plex_prerolls \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  -e TZ=Etc/UTC \
+  -e CRON_SCHEDULE="0 0 * * *" \
+  -v /path/to/config:/config \
+  -v /path/to/logs:/logs \
+  --restart unless-stopped \
+  nwithan8/plex_prerolls:latest
+```
+
+#### Paths and Environment Variables
+
+| Path      | Description                                                                         |
+|-----------|-------------------------------------------------------------------------------------|
+| `/config` | Path to config files (`config.ini` and `schedule.yaml` should be in this directory) |
+| `/logs`   | Path to log files (`schedule_preroll.log` will be in this directory)                |
+
+| Environment Variable | Description                                                       |
+|----------------------|-------------------------------------------------------------------|
+| `PUID`               | UID of user to run as                                             |
+| `PGID`               | GID of user to run as                                             |
+| `TZ`                 | Timezone to use for cron schedule                                 |
+| `CRON_SCHEDULE`      | Cron schedule to run script (see <https://crontab.guru> for help) |
+
 ---
 
-## Scheduling Script (Optional) <a id="scheduling"></a>
+## Schedule Rules
+
+Schedules follow the following priority:
+1. **misc**: Items listed in `always_use` will always be included (appended) to the preroll list
+
+2. **date_range**: Schedule based on a specific date/time range
+
+3. **weekly**: Schedule based on a specific week of the year
+
+4. **monthly**: Schedule based on a specific month of the year
+
+5. **default**: Default item to use if none of the above apply
+
+For any conflicting schedules, the script tries to find the closest matching range and highest priority.
+
+### Advanced Scheduling
+
+#### Date Range Section Scheduling
+
+`date_range` entries can accept both dates (`yyyy-mm-dd`) and datetimes (`yyyy-mm-dd hh:mm:ss`, 24-hour time).
+
+`date_range` entries can also accept wildcards for any of the date/time fields. This can be useful for scheduling recurring events, such as annual events, "first-of-the-month" events, or even hourly events.
+
+```yaml
+date_range:
+  enabled: true
+  ranges:
+    # Each entry requires start_date, end_date, path values
+    - start_date: 2020-01-01 # Jan 1st, 2020
+      end_date: 2020-01-02 # Jan 2nd, 2020
+      path: /path/to/video.mp4
+    - start_date: xxxx-07-04 # Every year on July 4th
+      end_date: xxxx-07-04 # Every year on July 4th
+      path: /path/to/video.mp4
+    - start_date: xxxx-xx-02 # Every year on the 2nd of every month
+      end_date: xxxx-xx-03 # Every year on the 3rd of every month
+      path: /path/to/video.mp4
+    - start_date: xxxx-xx-xx 08:00:00 # Every day at 8am
+      end_date: xxxx-xx-xx 09:30:00 # Every day at 9:30am
+      path: /path/to/holiday_video.mp4
+```
+
+You should [adjust your cron schedule](#scheduling-script) to run the script more frequently if you use this feature.
+
+---
+
+## Scheduling Script
+
+**NOTE:** Scheduling is handled automatically in the Docker version of this script via the `CRON_SCHEDULE` environment variable.
+
+### Linux
 
 Add to system scheduler:
-
-Linux:
 
 ```sh
 crontab -e
 ```
 
-Place desired schedule (example below for everyday at midnight)
+Place desired schedule (example below for every day at midnight)
 
 ```sh
 0 0 * * * python /path/to/schedule_preroll.py >/dev/null 2>&1
 ```
 
-or \
-(Optional) Wrap in a shell script: \
-useful if running other scripts/commands, using venv encapsulation, customizing arguments
+You can also wrap the execution in a shell script (useful if running other scripts/commands, using venv encapsulation, customizing arguments, etc.)
 
 ```sh
 0 0 * * * /path/to/schedule_preroll.sh >/dev/null 2>&1
 ```
 
-Schedule as frequently as needed for your environment and how specific and to your personal rotation schedule needs
-
----
-
-## Advanced Date Range Section Scheduling <a id="advanced_date"></a> (Optional)
-
-Date Ranges with Recurring Timeframes \
-Useful for static dates or times where you want recurring preroll activity
-
-Examples:
-
-- Every Morning
-- Yearly holidays (Halloween, New Years, Independence)
-- Birthdays, Anniversaries
-
-For either Start and/or End date of range \
-Substitute "xx" for date/times to schedule for "any" \
-Substitute "xxxx" for recurring year
-
-- xxxx-xx-01 - Every first of month
-- xxxx-xx-xx - Every day
-- xxxx-xx-xx 08:00:00 - every day from 8am
-- xxxx-01-01 - Every year on Jan 1 (new years day)
-
-if using Time, still must have a full datetime pattern (ex: hour, minute, second hh:mm:ss)
-
-```yaml
-#every July 4
-- start_date: xxxx-07-04
-  end_date: xxxx-07-04
-  path: /path/to/video.mp4
-# every first of month, all day
-- start_date: xxxx-xx-01
-  end_date: xxxx-xx-01
-  path: /path/to/video.mp4
-# 8-9 am every day
-- start_date: xxxx-xx-xx 08:00:00
-  end_date: xxxx-xx-xx 08:59:59
-  path: /path/to/video.mp4
-
-```
-
-Note: Detailed time based schedules benefit from increased running of the Python script for frequently - ex: Hourly \
-(See: [Scheduling Script](#scheduling) section)
-
----
-
-## Config `logger.conf` to your needs (Optional)
-
-See: <a href="https://docs.python.org/3/howto/logging.html" target="_blank"><https://docs.python.org/3/howto/logging.html></a>
-
----
-
-## Wrapping Up
-
-> Sit back and enjoy the Intros!
+Schedule as frequently as needed for your schedule (ex: hourly, daily, weekly, etc.)
 
 ---
 

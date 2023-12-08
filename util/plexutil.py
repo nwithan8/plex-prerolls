@@ -21,7 +21,7 @@ SCRIPT_NAME = os.path.splitext(filename)[0]
 
 
 def plex_config(config_file: Optional[str] = "") -> Dict[str, str]:
-    """Return Plex Config paramaters for connection info {PLEX_URL, PLEX_TOKEN}\n
+    """Return Plex Config parameters for connection info {PLEX_URL, PLEX_TOKEN}\n
     Attempts to use one of either:\n
     * supplier path/to/config file (INI Format)
     * local config.ini (primary)

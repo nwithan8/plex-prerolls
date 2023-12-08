@@ -1,7 +1,6 @@
 # Exclude local Config files
 config.ini
-preroll_schedules.yaml
-preroll_schedules.yml
+schedules.yaml
 
 #Dev environmet
 .devcontainer
