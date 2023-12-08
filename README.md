@@ -120,6 +120,7 @@ docker run -d \
 
 Schedules follow the following priority:
 1. **misc**: Items listed in `always_use` will always be included (appended) to the preroll list
+    - If you have a large set of prerolls, you can provide all paths and use `random_count` to randomly select a smaller subset of the list to use on each run.
 
 2. **date_range**: Schedule based on a specific date/time range
 
@@ -147,18 +148,24 @@ date_range:
     - start_date: 2020-01-01 # Jan 1st, 2020
       end_date: 2020-01-02 # Jan 2nd, 2020
       path: /path/to/video.mp4
+      weight: 2 # Add these paths to the list twice (make up greater percentage of prerolls - more likely to be selected)
     - start_date: xxxx-07-04 # Every year on July 4th
       end_date: xxxx-07-04 # Every year on July 4th
       path: /path/to/video.mp4
+      weight: 1
     - start_date: xxxx-xx-02 # Every year on the 2nd of every month
       end_date: xxxx-xx-03 # Every year on the 3rd of every month
       path: /path/to/video.mp4
+      weight: 1
     - start_date: xxxx-xx-xx 08:00:00 # Every day at 8am
       end_date: xxxx-xx-xx 09:30:00 # Every day at 9:30am
       path: /path/to/holiday_video.mp4
+      weight: 1
 ```
 
 You should [adjust your cron schedule](#scheduling-script) to run the script more frequently if you use this feature.
+
+`date_range` entries also accept an optional `weight` value that can be used to adjust the emphasis of this entry over others by adding the listed paths multiple times. Since Plex selects a random preroll from the list of paths, having the same path listed multiple times increases its chances of being selected over paths that only appear once. This allows you to combine, e.g. a `date_range` entry with a `misc` entry, but place more weight/emphasis on the `date_range` entry.
 
 ---
 
