@@ -4,7 +4,7 @@
 mkdir -p /etc/cron.d
 
 # Read cron schedule from environment variable
-CRON_SCHEDULE=${CRON_SCHEDULE:-"* * * * *"} # Default to midnight every day if not supplied
+CRON_SCHEDULE=${CRON_SCHEDULE:-"0 0 * * *"} # Default to midnight every day if not supplied
 
 echo "Cron schedule: $CRON_SCHEDULE"
 
@@ -14,8 +14,6 @@ if [ "$DRY_RUN" = "true" ]; then
 else
     DRY_RUN_FLAG=""
 fi
-
-DRY_RUN_FLAG="--dry-run"
 
 echo "Dry run flag: $DRY_RUN_FLAG"
 
