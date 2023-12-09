@@ -26,7 +26,8 @@ COPY . .
 
 # Delete unnecessary files in WORKDIR (/app) folder (not caught by .dockerignore)
 RUN echo "**** removing unneeded files ****"
-RUN rm -rf /requirements.txt
+# Remove all files except .py files and entrypoint.sh (keep all directories)
+RUN find / -type f -maxdepth 1 ! -name '*.py' ! -name 'entrypoint.sh' -delete
 
 # Run entrypoint.sh script
 ENTRYPOINT ["sh", "/entrypoint.sh"]
