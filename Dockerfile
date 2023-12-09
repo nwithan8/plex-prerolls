@@ -12,8 +12,11 @@ COPY requirements.txt requirements.txt
 # Install Python requirements
 RUN pip3 install --no-cache-dir -r requirements.txt
 
+# Make Docker /config volume for optional config file
+VOLUME /config
+
 # Copy config file from build machine to Docker /config folder
-COPY config.yaml* /
+COPY config.yaml* /config/
 
 # Make Docker /logs volume for log file
 VOLUME /logs

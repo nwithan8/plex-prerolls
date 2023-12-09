@@ -94,10 +94,10 @@ docker run -d \
 
 #### Paths and Environment Variables
 
-| Path    | Description                                                       |
-|---------|-------------------------------------------------------------------|
-| `/`     | Path to config files (`config.yaml` should be in this directory)  |
-| `/logs` | Path to log files (`Plex Prerolls.log` will be in this directory) |
+| Path      | Description                                                           |
+|-----------|-----------------------------------------------------------------------|
+| `/config` | Path to config directory (`config.yaml` should be in this directory)  |
+| `/logs`   | Path to log directory (`Plex Prerolls.log` will be in this directory) |
 
 | Environment Variable | Description                                                       |
 |----------------------|-------------------------------------------------------------------|
@@ -140,28 +140,28 @@ date_range:
     # Each entry requires start_date, end_date, path values
     - start_date: 2020-01-01 # Jan 1st, 2020
       end_date: 2020-01-02 # Jan 2nd, 2020
-      paths: 
-       - /path/to/video.mp4
-       - /path/to/another/video.mp4
+      paths:
+        - /path/to/video.mp4
+        - /path/to/another/video.mp4
       weight: 2 # Add these paths to the list twice (make up greater percentage of prerolls - more likely to be selected)
     - start_date: xxxx-07-04 # Every year on July 4th
       end_date: xxxx-07-04 # Every year on July 4th
       paths:
-         - /path/to/video.mp4
-         - /path/to/another/video.mp4
+        - /path/to/video.mp4
+        - /path/to/another/video.mp4
       weight: 1
     - name: "My Schedule" # Optional name for logging purposes
       start_date: xxxx-xx-02 # Every year on the 2nd of every month
       end_date: xxxx-xx-03 # Every year on the 3rd of every month
       paths:
-         - /path/to/video.mp4
-         - /path/to/another/video.mp4
+        - /path/to/video.mp4
+        - /path/to/another/video.mp4
       weight: 1
     - start_date: xxxx-xx-xx 08:00:00 # Every day at 8am
       end_date: xxxx-xx-xx 09:30:00 # Every day at 9:30am
       paths:
-         - /path/to/video.mp4
-         - /path/to/another/video.mp4
+        - /path/to/video.mp4
+        - /path/to/another/video.mp4
       weight: 1
 ```
 
