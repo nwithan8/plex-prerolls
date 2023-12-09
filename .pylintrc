@@ -1,5 +1,0 @@
-[MASTER]
-disable=
-    C0114, # missing-module-docstring
-    C0103, # scake_case
-    W0621, # redefine variable from outer scope

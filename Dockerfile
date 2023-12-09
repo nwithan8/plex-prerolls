@@ -12,19 +12,8 @@ COPY requirements.txt requirements.txt
 # Install Python requirements
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Make Docker /config volume for optional config file
-VOLUME /config
-
-# Copy logging.conf file from build machine to Docker /config folder
-COPY logging.conf /config/
-
-# Copy example config file from build machine to Docker /config folder
-# Also copies any existing config.ini file from build machine to Docker /config folder, (will cause the bot to use the existing config file if it exists)
-COPY config.ini* /config/
-
-# Copy example schedule file from build machine to Docker /config folder
-# Also copies any existing schedules.yaml file from build machine to Docker /config folder, (will cause the bot to use the existing schedule file if it exists)
-COPY schedules.yaml* /config/
+# Copy config file from build machine to Docker /config folder
+COPY config.yaml /
 
 # Make Docker /logs volume for log file
 VOLUME /logs

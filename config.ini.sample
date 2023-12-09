@@ -1,7 +1,0 @@
-[plexapi]
-container_size = 200
-timeout = 60
-
-[auth]
-server_baseurl = http://127.0.0.1:32400
-server_token = <PLEX_TOKEN>
