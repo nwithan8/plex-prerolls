@@ -13,7 +13,7 @@ COPY requirements.txt requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Copy config file from build machine to Docker /config folder
-COPY config.yaml /
+COPY config.yaml* /
 
 # Make Docker /logs volume for log file
 VOLUME /logs
