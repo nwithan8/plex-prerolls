@@ -152,7 +152,7 @@ class ScheduleManager:
     def valid_schedule_count_log_message(self) -> str:
         return f"""
 Valid Schedule Count:
-Always - {self.valid_always_schedule_count}
+Always - {"Disabled by other schedule(s)" if self.disable_always else self.valid_always_schedule_count}
 {self.valid_always_schedule_log_message}
 Weekly - {self.valid_weekly_schedule_count}
 {self.valid_weekly_schedule_log_message}

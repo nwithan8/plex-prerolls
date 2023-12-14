@@ -1,18 +1,18 @@
-from typing import List, Union
+from typing import List, Union, Tuple
 
 from plexapi.server import PlexServer
 
 import modules.logs as logging
 
 
-def prepare_pre_roll_string(paths: List[str]) -> Union[str, None]:
+def prepare_pre_roll_string(paths: List[str]) -> Tuple[Union[str, None], int]:
     if not paths:
-        return None
+        return None, 0
 
     # Filter out empty paths
     paths = [path for path in paths if path]
 
-    return ";".join(paths)
+    return ";".join(paths), len(paths)
 
 
 class PlexConnector:
@@ -23,10 +23,12 @@ class PlexConnector:
         self._plex_server = PlexServer(baseurl=self._host, token=self._token)
 
     def update_pre_roll_paths(self, paths: List[str], testing: bool = False) -> None:
-        pre_roll_string = prepare_pre_roll_string(paths=paths)
+        pre_roll_string, count = prepare_pre_roll_string(paths=paths)
         if not pre_roll_string:
             logging.info("No pre-roll paths to update")
             return
+
+        logging.info(f"Using {count} pre-roll paths")
 
         if testing:
             logging.debug(f"Testing: Would have updated pre-roll to: {pre_roll_string}")
