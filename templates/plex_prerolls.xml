@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Container version="2">
-    <Name>plex_prerolls</Name>
+    <Name>Plex Prerolls</Name>
     <Repository>nwithan8/plex_prerolls:latest</Repository>
     <Registry>https://hub.docker.com/r/nwithan8/plex_prerolls</Registry>
     <Branch>
@@ -11,7 +11,7 @@
     <Shell>bash</Shell>
     <Privileged>false</Privileged>
     <Support>https://forums.unraid.net/topic/133764-support-grtgbln-docker-templates</Support>
-    <Project>https://github.com/nwithan8/plex-schedule-prerolls</Project>
+    <Project>https://github.com/nwithan8/plex-prerolls</Project>
     <Overview>Plex Prerolls is a tool to automate preroll scheduling for a Plex Media Server.</Overview>
     <Category>Tools: MediaServer Status:Stable</Category>
     <TemplateURL>https://raw.githubusercontent.com/nwithan8/unraid_templates/main/templates/plex_prerolls.xml</TemplateURL>

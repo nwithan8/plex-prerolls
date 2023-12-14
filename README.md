@@ -23,7 +23,7 @@ Define when you want different pre-rolls to play throughout the year. For exampl
 Clone the repo:
 
 ```sh
-git clone https://github.com/nwithan8/plex-schedule-prerolls.git
+git clone https://github.com/nwithan8/plex-prerolls.git
 ```
 
 Install Python requirements:
