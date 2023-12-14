@@ -1,11 +1,11 @@
 from typing import List
 
+import modules.logs as logging
 from modules import models
 from modules.config_parser import (
     Config,
 )
 from modules.models import ScheduleEntry
-import modules.logs as logging
 
 
 class ScheduleManager:
@@ -23,20 +23,23 @@ class ScheduleManager:
             for week in self._config.weekly.weeks:
                 self.weekly_schedules.append(models.schedule_entry_from_week_number(week_number=week.number,
                                                                                     paths=week.paths,
-                                                                                    weight=week.weight))
+                                                                                    weight=week.weight,
+                                                                                    disable_always=week.disable_always))
 
         if self._config.monthly.enabled:
             for month in self._config.monthly.months:
                 self.monthly_schedules.append(models.schedule_entry_from_month_number(month_number=month.number,
                                                                                       paths=month.paths,
-                                                                                      weight=month.weight))
+                                                                                      weight=month.weight,
+                                                                                      disable_always=month.disable_always))
         if self._config.date_ranges.enabled:
             for date_range in self._config.date_ranges.ranges:
                 entry = models.schedule_entry_from_date_range(start_date_string=date_range.start_date,
                                                               end_date_string=date_range.end_date,
                                                               paths=date_range.paths,
                                                               weight=date_range.weight,
-                                                              name=date_range.name)
+                                                              name=date_range.name,
+                                                              disable_always=date_range.disable_always)
                 if entry:
                     self.date_range_schedules.append(entry)
 
@@ -92,6 +95,9 @@ class ScheduleManager:
 
     @property
     def valid_always_schedules(self) -> List[ScheduleEntry]:
+        if self.disable_always:
+            return []
+
         return [schedule for schedule in self.always_schedules if schedule.should_be_used]
 
     @property
@@ -106,8 +112,21 @@ class ScheduleManager:
         return valid_schedules
 
     @property
+    def all_schedules_except_always(self) -> List[ScheduleEntry]:
+        return self.weekly_schedules + self.monthly_schedules + self.date_range_schedules
+
+    @property
+    def disable_always(self) -> bool:
+        return any([schedule.disable_always for schedule in self.all_schedules_except_always])
+
+    @property
     def all_schedules(self) -> List[ScheduleEntry]:
-        return self.always_schedules + self.weekly_schedules + self.monthly_schedules + self.date_range_schedules
+        schedules = self.all_schedules_except_always
+
+        if not self.disable_always:
+            schedules += self.always_schedules
+
+        return schedules
 
     @property
     def all_valid_schedules(self) -> List[ScheduleEntry]:

@@ -126,6 +126,44 @@ You can define as many schedules as you want, in the following categories (order
 
 ### Advanced Scheduling
 
+#### Weight
+
+All schedule entries accept an optional `weight` value that can be used to adjust the emphasis of this entry over
+others by adding the listed paths multiple times. Since Plex selects a random preroll from the list of paths, having the
+same path listed multiple times increases its chances of being selected over paths that only appear once. This allows
+you to combine, e.g. a `date_range` entry with a `misc` entry, but place more weight/emphasis on the `date_range` entry.
+
+```yaml
+date_range:
+  enabled: true
+  ranges:
+    - start_date: 2020-01-01 # Jan 1st, 2020
+      end_date: 2020-01-02 # Jan 2nd, 2020
+      paths:
+        - /path/to/video.mp4
+        - /path/to/another/video.mp4
+      weight: 2 # Add these paths to the list twice (make up greater percentage of prerolls - more likely to be selected)
+```
+
+#### Disable Always
+
+Any schedule entry (except for the `always` section) can disable the inclusion of the `always` section by setting the
+`disable_always` value to `true`. This can be useful if you want to make one specific, i.e. `date_range` entry for a holiday, 
+and you don't want to include the `always` section for this specific holiday, but you still want to include the `always` section
+for other holidays.
+
+```yaml
+date_range:
+  enabled: true
+  ranges:
+    - start_date: 2020-01-01 # Jan 1st, 2020
+      end_date: 2020-01-02 # Jan 2nd, 2020
+      paths:
+        - /path/to/video.mp4
+        - /path/to/another/video.mp4
+      disable_always: true # Disable the inclusion of the `always` section when this entry is active
+```
+
 #### Date Range Section Scheduling
 
 `date_range` entries can accept both dates (`yyyy-mm-dd`) and datetimes (`yyyy-mm-dd hh:mm:ss`, 24-hour time).
@@ -143,34 +181,25 @@ date_range:
       paths:
         - /path/to/video.mp4
         - /path/to/another/video.mp4
-      weight: 2 # Add these paths to the list twice (make up greater percentage of prerolls - more likely to be selected)
     - start_date: xxxx-07-04 # Every year on July 4th
       end_date: xxxx-07-04 # Every year on July 4th
       paths:
         - /path/to/video.mp4
         - /path/to/another/video.mp4
-      weight: 1
     - name: "My Schedule" # Optional name for logging purposes
       start_date: xxxx-xx-02 # Every year on the 2nd of every month
       end_date: xxxx-xx-03 # Every year on the 3rd of every month
       paths:
         - /path/to/video.mp4
         - /path/to/another/video.mp4
-      weight: 1
     - start_date: xxxx-xx-xx 08:00:00 # Every day at 8am
       end_date: xxxx-xx-xx 09:30:00 # Every day at 9:30am
       paths:
         - /path/to/video.mp4
         - /path/to/another/video.mp4
-      weight: 1
 ```
 
 You should [adjust your cron schedule](#scheduling-script) to run the script more frequently if you use this feature.
-
-`date_range` entries also accept an optional `weight` value that can be used to adjust the emphasis of this entry over
-others by adding the listed paths multiple times. Since Plex selects a random preroll from the list of paths, having the
-same path listed multiple times increases its chances of being selected over paths that only appear once. This allows
-you to combine, e.g. a `date_range` entry with a `misc` entry, but place more weight/emphasis on the `date_range` entry.
 
 `date_range` entries also accept an optional `name` value that can be used to identify the schedule in the logs.
 

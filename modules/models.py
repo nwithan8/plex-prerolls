@@ -14,6 +14,7 @@ class ScheduleEntry(NamedTuple):
     paths: List[str]
     weight: int
     name_prefix: str
+    disable_always: bool = False
 
     @property
     def should_be_used(self) -> bool:
@@ -44,7 +45,7 @@ def schedule_entry_from_always(paths: List[str], count: int, weight: int) -> Sch
                          name_prefix="Always")
 
 
-def schedule_entry_from_week_number(week_number: int, paths: List[str], weight: int) -> Union[ScheduleEntry, None]:
+def schedule_entry_from_week_number(week_number: int, paths: List[str], weight: int, disable_always: bool = False) -> Union[ScheduleEntry, None]:
     start_date = utils.start_of_week_number(week_number=week_number)
     end_date = utils.end_of_week_number(week_number=week_number)
 
@@ -53,10 +54,11 @@ def schedule_entry_from_week_number(week_number: int, paths: List[str], weight: 
                          end_date=end_date,
                          paths=paths,
                          weight=weight,
+                         disable_always=disable_always,
                          name_prefix=f"Week {week_number}")
 
 
-def schedule_entry_from_month_number(month_number: int, paths: List[str], weight: int) -> Union[ScheduleEntry, None]:
+def schedule_entry_from_month_number(month_number: int, paths: List[str], weight: int, disable_always: bool = False) -> Union[ScheduleEntry, None]:
     start_date = utils.start_of_month(month_number=month_number)
     end_date = utils.end_of_month(month_number=month_number)
 
@@ -65,11 +67,12 @@ def schedule_entry_from_month_number(month_number: int, paths: List[str], weight
                          end_date=end_date,
                          paths=paths,
                          weight=weight,
+                         disable_always=disable_always,
                          name_prefix=f"Month {month_number}")
 
 
 def schedule_entry_from_date_range(start_date_string: str, end_date_string: str, paths: List[str], weight: int,
-                                   name: str = None) \
+                                   disable_always: bool = False, name: str = None) \
         -> Union[ScheduleEntry, None]:
     if not name:
         name = "Date Range"
@@ -89,4 +92,5 @@ def schedule_entry_from_date_range(start_date_string: str, end_date_string: str,
                          end_date=end_date,
                          paths=paths,
                          weight=weight,
+                         disable_always=disable_always,
                          name_prefix=name)

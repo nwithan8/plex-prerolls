@@ -36,6 +36,10 @@ class Entry(YAMLElement):
     def weight(self) -> int:
         return self._get_value(key="weight", default=1)
 
+    @property
+    def disable_always(self) -> bool:
+        return self._get_value(key="disable_always", default=False)
+
 
 class NumericalEntry(Entry):
     def __init__(self, data):
