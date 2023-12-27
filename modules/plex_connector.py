@@ -1,6 +1,7 @@
 from typing import List, Union, Tuple
 
 from plexapi.server import PlexServer
+from plexapi.exceptions import BadRequest
 
 import modules.logs as logging
 
@@ -40,6 +41,10 @@ class PlexConnector:
 
         try:
             self._plex_server.settings.save()  # type: ignore
+        except BadRequest as e:
+            if "Too Large" in str(e):
+                logging.error("Failed to update pre-roll: Too many paths")
+                return
         except Exception as e:
             logging.error(f"Failed to save pre-roll: {e}")
             return
