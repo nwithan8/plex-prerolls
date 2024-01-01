@@ -215,6 +215,10 @@ def wildcard_strings_to_datetimes(start_date_string: str, end_date_string: str) 
     else:
         need_specific_datetime = True
 
+    # Finalize the seconds
+    start_second = int(start_second)
+    end_second = int(end_second)
+
     start_minute = start_time_parts[1]
     end_minute = end_time_parts[1]
 
@@ -234,6 +238,10 @@ def wildcard_strings_to_datetimes(start_date_string: str, end_date_string: str) 
     else:
         need_specific_datetime = True
 
+    # Finalize the minutes
+    start_minute = int(start_minute)
+    end_minute = int(end_minute)
+
     start_hour = start_time_parts[0]
     end_hour = end_time_parts[0]
 
@@ -250,6 +258,10 @@ def wildcard_strings_to_datetimes(start_date_string: str, end_date_string: str) 
         else:
             start_hour = '00'
             end_hour = '23'  # Keep wide to ensure script running time doesn't interfere
+
+    # Finalize the hours
+    start_hour = int(start_hour)
+    end_hour = int(end_hour)
 
     _start_time = f"{start_hour}:{start_minute}:{start_second}"
     _end_time = f"{end_hour}:{end_minute}:{end_second}"
@@ -272,6 +284,10 @@ def wildcard_strings_to_datetimes(start_date_string: str, end_date_string: str) 
     else:
         need_specific_datetime = True
 
+    # Finalize the days
+    start_day = int(start_day)
+    end_day = int(end_day)
+
     start_month = start_date_parts[1]
     end_month = end_date_parts[1]
 
@@ -285,11 +301,22 @@ def wildcard_strings_to_datetimes(start_date_string: str, end_date_string: str) 
         if need_specific_datetime:
             start_month = _now.month
             end_month = _now.month
+
+            # Account for crossing a month boundary
+            if start_day > end_day:  # e.g. Start on the 31st and end on the 1st
+                if _now.day < start_day:  # Current date is before start day (in the next month)
+                    start_month -= 1  # TODO: This could break if the start_month is January (1) -> 0
+                else:
+                    end_month += 1  # TODO: This could break if the end_month is December (12) -> 13
         else:
             start_month = start_of_year().month
             end_month = end_of_year().month
     else:
         need_specific_datetime = True
+
+    # Finalize the months
+    start_month = int(start_month)
+    end_month = int(end_month)
 
     start_year = start_date_parts[0]
     end_year = end_date_parts[0]
@@ -299,14 +326,26 @@ def wildcard_strings_to_datetimes(start_date_string: str, end_date_string: str) 
         logging.error(message=f"Incompatible year comparison: {start_date_string} - {end_date_string}")
         return None, None
 
-    # At this point, either they both have wildcards or neither do, we can assume based on start_yea
+    # At this point, either they both have wildcards or neither do, we can assume based on start_year
     if start_year == 'xxxx':
         if need_specific_datetime:
             start_year = _now.year
             end_year = _now.year
+
+            # Account for crossing a year boundary
+            # At this point, the start_month and end_month are numerical strings or ints
+            if start_month > end_month:  # e.g. Start in December (12) and end in January (1)
+                if _now.month < start_month:  # Current date is before start month (in the next year)
+                    start_year -= 1
+                else:
+                    end_year += 1
         else:
             start_year = start_of_time().year
             end_year = end_of_time().year
+
+    # Finalize the years
+    start_year = int(start_year)
+    end_year = int(end_year)
 
     _start_date = f"{start_year}-{start_month}-{start_day}"
     _end_date = f"{end_year}-{end_month}-{end_day}"
