@@ -116,8 +116,12 @@ class ScheduleManager:
         return self.weekly_schedules + self.monthly_schedules + self.date_range_schedules
 
     @property
+    def all_valid_schedule_except_always(self) -> List[ScheduleEntry]:
+        return [schedule for schedule in self.all_schedules_except_always if schedule.should_be_used]
+
+    @property
     def disable_always(self) -> bool:
-        return any([schedule.disable_always for schedule in self.all_schedules_except_always])
+        return any([schedule.disable_always for schedule in self.all_valid_schedule_except_always])
 
     @property
     def all_schedules(self) -> List[ScheduleEntry]:
