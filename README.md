@@ -131,7 +131,7 @@ You can define as many schedules as you want, in the following categories (order
 All schedule entries accept an optional `weight` value that can be used to adjust the emphasis of this entry over
 others by adding the listed paths multiple times. Since Plex selects a random preroll from the list of paths, having the
 same path listed multiple times increases its chances of being selected over paths that only appear once. This allows
-you to combine, e.g. a `date_range` entry with a `misc` entry, but place more weight/emphasis on the `date_range` entry.
+you to combine, e.g. a `date_range` entry with an `always` entry, but place more weight/emphasis on the `date_range` entry.
 
 ```yaml
 date_range:
