@@ -27,10 +27,10 @@ jobs:
       - name: Establish variables
         id: vars
         run: |
-          VERSION=${{ github.event.inputs.version || github.ref_name }}
-          echo ::set-output name=version::${VERSION}
-          echo ::set-output name=today::$(date +'%Y-%m-%d')
-          echo "::set-output name=year::$(date +'%Y')"
+          echo "app_name=plex_prerolls" >> "$GITHUB_OUTPUT"
+          echo "version=${{ github.event.inputs.version || github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          echo "today=$(date +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
+          echo "year=$(date +'%Y')" >> "$GITHUB_OUTPUT"
 
       - name: Update version number
         uses: jacobtomlinson/gha-find-replace@2.0.0
@@ -75,11 +75,11 @@ jobs:
           push: true
           platforms: linux/amd64,linux/armhf,linux/arm64
           tags: |
-            nwithan8/plex_prerolls:latest
-            nwithan8/plex_prerolls:${{ steps.vars.outputs.version }}
-            ghcr.io/nwithan8/plex_prerolls:latest
-            ghcr.io/nwithan8/plex_prerolls:${{ steps.vars.outputs.version }}
+            nwithan8/${{ steps.vars.outputs.app_name }}:latest
+            nwithan8/${{ steps.vars.outputs.app_name }}:${{ steps.vars.outputs.version }}
+            ghcr.io/nwithan8/${{ steps.vars.outputs.app_name }}:latest
+            ghcr.io/nwithan8/${{ steps.vars.outputs.app_name }}:${{ steps.vars.outputs.version }}
           labels: |
-            org.opencontainers.image.title=plex_prerolls
+            org.opencontainers.image.title=${{ steps.vars.outputs.app_name }}
             org.opencontainers.image.version=${{ steps.vars.outputs.version }}
             org.opencontainers.image.created=${{ steps.vars.outputs.today }}
