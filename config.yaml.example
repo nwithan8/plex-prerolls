@@ -9,9 +9,11 @@ plex:
 always:
   enabled: true
   paths:
-    - "path/to/video1.mp4"
-    - "path/to/video2.mp4"
-    - "path/to/video3.mp4"
+    - "remote/path/to/video1.mp4"
+    - "remote/path/to/video2.mp4"
+    - "remote/path/to/video3.mp4"
+  path_globs:
+    - "local/path/to/prerolls/*.mp4" # Optional, use globbing to match local paths
   count: 10 # Optional, randomly select X many videos from the list rather than all of them
   weight: 1 # Optional, how much to emphasize these pre-rolls over others (higher = more likely to play)
 
@@ -23,30 +25,32 @@ date_range:
       start_date: 2020-01-01 # Jan 1st, 2020
       end_date: 2020-01-02 # Jan 2nd, 2020
       paths:
-        - "path/to/video1.mp4"
-        - "path/to/video2.mp4"
-        - "path/to/video3.mp4"
+        - "remote/path/to/video1.mp4"
+        - "remote/path/to/video2.mp4"
+        - "remote/path/to/video3.mp4"
+      path_globs:
+        - "local/path/to/prerolls/*.mp4" # Optional, use globbing to match local paths
       weight: 2 # Optional, add these paths to the list twice (make up greater percentage of prerolls - more likely to be selected)
       disable_always: true # Optional, if present and true, disable the always prerolls when this schedule is active
     - start_date: xxxx-07-04 # Every year on July 4th
       end_date: xxxx-07-04 # Every year on July 4th
       paths:
-        - "path/to/video1.mp4"
-        - "path/to/video2.mp4"
-        - "path/to/video3.mp4"
+        - "remote/path/to/video1.mp4"
+        - "remote/path/to/video2.mp4"
+        - "remote/path/to/video3.mp4"
       disable_always: false
     - start_date: xxxx-xx-02 # Every year on the 2nd of every month
       end_date: xxxx-xx-03 # Every year on the 3rd of every month
       paths:
-        - "path/to/video1.mp4"
-        - "path/to/video2.mp4"
-        - "path/to/video3.mp4"
+        - "remote/path/to/video1.mp4"
+        - "remote/path/to/video2.mp4"
+        - "remote/path/to/video3.mp4"
     - start_date: xxxx-xx-xx 08:00:00 # Every day at 8am
       end_date: xxxx-xx-xx 09:30:00 # Every day at 9:30am
       paths:
-        - "path/to/video1.mp4"
-        - "path/to/video2.mp4"
-        - "path/to/video3.mp4"
+        - "remote/path/to/video1.mp4"
+        - "remote/path/to/video2.mp4"
+        - "remote/path/to/video3.mp4"
 
 # Schedule prerolls by week of the year
 weekly:
@@ -54,15 +58,17 @@ weekly:
   weeks:
     - number: 1 # First week of the year
       paths:
-        - "path/to/video1.mp4"
-        - "path/to/video2.mp4"
-        - "path/to/video3.mp4"
+        - "remote/path/to/video1.mp4"
+        - "remote/path/to/video2.mp4"
+        - "remote/path/to/video3.mp4"
+      path_globs:
+        - "local/path/to/prerolls/*.mp4" # Optional, use globbing to match local paths
       weight: 1 # Optional, how much to emphasize these pre-rolls over others (higher = more likely to play)
     - number: 2 # Second week of the year
       paths:
-        - "path/to/video1.mp4"
-        - "path/to/video2.mp4"
-        - "path/to/video3.mp4"
+        - "remote/path/to/video1.mp4"
+        - "remote/path/to/video2.mp4"
+        - "remote/path/to/video3.mp4"
       disable_always: true # If true, disable the always prerolls when this schedule is active
 
 # Schedule prerolls by month of the year
@@ -71,13 +77,21 @@ monthly:
   months:
     - number: 1 # January
       paths:
-        - "path/to/video1.mp4"
-        - "path/to/video2.mp4"
-        - "path/to/video3.mp4"
+        - "remote/path/to/video1.mp4"
+        - "remote/path/to/video2.mp4"
+        - "remote/path/to/video3.mp4"
       weight: 1 # Optional, how much to emphasize these pre-rolls over others (higher = more likely to play)
     - number: 2 # February
       paths:
-        - "path/to/video1.mp4"
-        - "path/to/video2.mp4"
-        - "path/to/video3.mp4"
+        - "remote/path/to/video1.mp4"
+        - "remote/path/to/video2.mp4"
+        - "remote/path/to/video3.mp4"
+      path_globs:
+        - "local/path/to/prerolls/*.mp4" # Optional, use globbing to match local paths
       disable_always: false # If true, disable the always prerolls when this schedule is active
+
+advanced:
+  path_globbing:
+    enabled: true # If true, use globbing to match paths
+    root_path: /files # The root folder to use for globbing
+    plex_path: /path/to/prerolls/in/plex # The path to use for the Plex server

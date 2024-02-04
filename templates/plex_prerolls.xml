@@ -21,6 +21,7 @@
     <Config Name="Cron Schedule" Target="CRON_SCHEDULE" Default="0 0 * * *" Description="How often to update schedules. See https://crontab.guru for help." Type="Variable" Display="always" Required="true" Mask="false" />
     <Config Name="Dry Run" Target="DRY_RUN" Default="" Description="Enable dry-run (testing) mode. No changes will be made to Plex." Type="Variable" Display="always" Required="false" Mask="false" />
     <Config Name="Timezone" Target="TZ" Default="UTC" Description="Timezone to use when calculating schedules" Type="Variable" Display="always" Required="false" Mask="false">UTC</Config>
-    <Config Name="Config Path" Target="/config" Default="/mnt/user/appdata/plex_prerolls/config" Mode="rw" Description="Where config file will be stored" Type="Path" Display="advanced" Required="true" Mask="false">/mnt/user/appdata/plex_prerolls/config</Config>
+    <Config Name="Config Path" Target="/config" Default="/mnt/user/appdata/plex_prerolls/config" Mode="ro" Description="Where config file will be stored" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/plex_prerolls/config</Config>
     <Config Name="Log Path" Target="/logs" Default="/mnt/user/appdata/plex_prerolls/logs" Mode="rw" Description="Where debug logs will be stored" Type="Path" Display="advanced" Required="true" Mask="false">/mnt/user/appdata/plex_prerolls/logs</Config>
+    <Config Name="Files Path" Target="/files" Default="/mnt/user/appdata/plex_prerolls/files" Mode="ro" Description="(Optional) Where preroll files are stored, for local path glob feature" Type="Path" Display="advanced" Required="false" Mask="false">/mnt/user/appdata/plex_prerolls/files</Config>
 </Container>
