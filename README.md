@@ -239,7 +239,10 @@ at `/media/prerolls`, you would set the `root_path` to `/mnt/user/media/prerolls
 to `/media/prerolls`.
 
 If you are using the Docker container, you can mount the preroll directory to the container at any location you would
-prefer (recommend: `/media/prerolls`) and set the `root_path` accordingly.
+prefer (recommended: `/files`) and set the `root_path` accordingly.
+
+If you are using the Unraid version of this container, the "Files Path" path is mapped to `/files` by default; you
+should set `root_path` to `/files` and `plex_path` to the same directory as seen by Plex.
 
 #### Usage
 

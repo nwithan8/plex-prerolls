@@ -93,5 +93,5 @@ monthly:
 advanced:
   path_globbing:
     enabled: true # If true, use globbing to match paths
-    root_path: /path/to/prerolls/in/this/container # The root folder to use for globbing
+    root_path: /files # The root folder to use for globbing
     plex_path: /path/to/prerolls/in/plex # The path to use for the Plex server
