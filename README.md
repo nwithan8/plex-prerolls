@@ -94,10 +94,11 @@ docker run -d \
 
 #### Paths and Environment Variables
 
-| Path      | Description                                                           |
-|-----------|-----------------------------------------------------------------------|
-| `/config` | Path to config directory (`config.yaml` should be in this directory)  |
-| `/logs`   | Path to log directory (`Plex Prerolls.log` will be in this directory) |
+| Path                     | Description                                                                                   |
+|--------------------------|-----------------------------------------------------------------------------------------------|
+| `/config`                | Path to config directory (`config.yaml` should be in this directory)                          |
+| `/logs`                  | Path to log directory (`Plex Prerolls.log` will be in this directory)                         |
+| `/path/to/preroll/files` | Path to the root directory of all preroll files (for [Path Globbing](#path-globbing) feature) |
 
 | Environment Variable | Description                                                       |
 |----------------------|-------------------------------------------------------------------|
@@ -131,7 +132,8 @@ You can define as many schedules as you want, in the following categories (order
 All schedule entries accept an optional `weight` value that can be used to adjust the emphasis of this entry over
 others by adding the listed paths multiple times. Since Plex selects a random preroll from the list of paths, having the
 same path listed multiple times increases its chances of being selected over paths that only appear once. This allows
-you to combine, e.g. a `date_range` entry with an `always` entry, but place more weight/emphasis on the `date_range` entry.
+you to combine, e.g. a `date_range` entry with an `always` entry, but place more weight/emphasis on the `date_range`
+entry.
 
 ```yaml
 date_range:
@@ -148,8 +150,10 @@ date_range:
 #### Disable Always
 
 Any schedule entry (except for the `always` section) can disable the inclusion of the `always` section by setting the
-`disable_always` value to `true`. This can be useful if you want to make one specific, i.e. `date_range` entry for a holiday, 
-and you don't want to include the `always` section for this specific holiday, but you still want to include the `always` section
+`disable_always` value to `true`. This can be useful if you want to make one specific, i.e. `date_range` entry for a
+holiday,
+and you don't want to include the `always` section for this specific holiday, but you still want to include the `always`
+section
 for other holidays.
 
 ```yaml
@@ -202,6 +206,81 @@ date_range:
 You should [adjust your cron schedule](#scheduling-script) to run the script more frequently if you use this feature.
 
 `date_range` entries also accept an optional `name` value that can be used to identify the schedule in the logs.
+
+---
+
+## Advanced Configuration
+
+### Path Globbing
+
+**NOTE**: This feature will only work if you are running the script/Docker container on the same machine as your Plex
+server.
+
+Instead of listing out each individual preroll file, you can use glob (wildcard) patterns to match multiple files in a
+specific directory.
+The application will search for all files on your local filesystem that match the pattern(s) and automatically translate
+them to Plex-compatible remote paths.
+
+#### Setup
+
+Enable the feature under the advanced section of the config file, and specify the path to the root directory of your
+preroll files, as well as the path to the same directory as seen by Plex.
+
+```yaml
+advanced:
+  path_globbing:
+    enabled: true
+    root_path: /path/to/preroll/directory/in/relation/to/application
+    plex_path: /path/to/same/directory/as/seen/by/plex
+```
+
+For example, if your prerolls on your file system are located at `/mnt/user/media/prerolls` and Plex sees them
+at `/media/prerolls`, you would set the `root_path` to `/mnt/user/media/prerolls` and the `plex_path`
+to `/media/prerolls`.
+
+If you are using the Docker container, you can mount the preroll directory to the container at any location you would
+prefer (recommended: `/files`) and set the `root_path` accordingly.
+
+If you are using the Unraid version of this container, the "Files Path" path is mapped to `/files` by default; you
+should set `root_path` to `/files` and `plex_path` to the same directory as seen by Plex.
+
+#### Usage
+
+In any schedule section, you can use the `path_globs` key to specify a list of glob patterns to match files.
+
+```yaml
+always:
+  enabled: true
+  paths:
+    - /remote/path/1.mp4
+    - /remote/path/2.mp4
+    - /remote/path/3.mp4
+  path_globs:
+    - "*.mp4"
+```
+
+The above example will match all `.mp4` files in the `root_path` directory and append them to the list of prerolls.
+
+If you have organized your prerolls into subdirectories, you can specify specific subdirectories to match, or use `**`
+to match all subdirectories.
+
+```yaml
+always:
+  enabled: true
+  paths:
+    - /remote/path/1.mp4
+    - /remote/path/2.mp4
+    - /remote/path/3.mp4
+  path_globs:
+    - "subdir1/*.mp4"
+    - "subdir2/*.mp4"
+    - "subdir3/**/*.mp4"
+```
+
+You can use both `paths` and `path_globs` in the same section, allowing you to mix and match specific files with glob
+patterns.
+Please note that `paths` entries must be fully-qualified **remote** paths (as seen by Plex), while `path_globs` entries
+are relative to the **local** `root_path` directory.
 
 ---
 

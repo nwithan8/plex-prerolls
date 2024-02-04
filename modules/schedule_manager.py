@@ -21,32 +21,41 @@ class ScheduleManager:
         logging.info("Parsing schedules...")
         if self._config.weekly.enabled:
             for week in self._config.weekly.weeks:
-                self.weekly_schedules.append(models.schedule_entry_from_week_number(week_number=week.number,
-                                                                                    paths=week.paths,
-                                                                                    weight=week.weight,
-                                                                                    disable_always=week.disable_always))
+                self.weekly_schedules.append(models.schedule_entry_from_week_number(
+                    week_number=week.number,
+                    paths=week.all_paths(
+                        advanced_settings=self._config.advanced),
+                    weight=week.weight,
+                    disable_always=week.disable_always))
 
         if self._config.monthly.enabled:
             for month in self._config.monthly.months:
-                self.monthly_schedules.append(models.schedule_entry_from_month_number(month_number=month.number,
-                                                                                      paths=month.paths,
-                                                                                      weight=month.weight,
-                                                                                      disable_always=month.disable_always))
+                self.monthly_schedules.append(models.schedule_entry_from_month_number(
+                    month_number=month.number,
+                    paths=month.all_paths(
+                        advanced_settings=self._config.advanced),
+                    weight=month.weight,
+                    disable_always=month.disable_always))
         if self._config.date_ranges.enabled:
             for date_range in self._config.date_ranges.ranges:
-                entry = models.schedule_entry_from_date_range(start_date_string=date_range.start_date,
-                                                              end_date_string=date_range.end_date,
-                                                              paths=date_range.paths,
-                                                              weight=date_range.weight,
-                                                              name=date_range.name,
-                                                              disable_always=date_range.disable_always)
+                entry = models.schedule_entry_from_date_range(
+                    start_date_string=date_range.start_date,
+                    end_date_string=date_range.end_date,
+                    paths=date_range.all_paths(
+                        advanced_settings=self._config.advanced),
+                    weight=date_range.weight,
+                    name=date_range.name,
+                    disable_always=date_range.disable_always)
                 if entry:
                     self.date_range_schedules.append(entry)
 
         if self._config.always.enabled:
-            self.always_schedules.append(models.schedule_entry_from_always(paths=self._config.always.paths,
-                                                                           count=self._config.always.random_count,
-                                                                           weight=self._config.always.weight))
+            self.always_schedules.append(models.schedule_entry_from_always(
+                paths=self._config.always.all_paths(
+                    advanced_settings=self._config.advanced),
+                count=self._config.always.random_count(
+                    advanced_settings=self._config.advanced),
+                weight=self._config.always.weight))
 
     @property
     def valid_weekly_schedules(self) -> List[ScheduleEntry]:
