@@ -14,6 +14,7 @@
     <Project>https://github.com/nwithan8/plex-prerolls</Project>
     <Overview>Plex Prerolls is a tool to automate preroll scheduling for a Plex Media Server.</Overview>
     <Category>Tools: MediaServer Status:Stable</Category>
+    <Icon>https://raw.githubusercontent.com/nwithan8/plex-prerolls/main/documentation/images/logo.png</Icon>
     <TemplateURL>https://raw.githubusercontent.com/nwithan8/unraid_templates/main/templates/plex_prerolls.xml</TemplateURL>
     <Maintainer>
         <WebPage>https://github.com/nwithan8</WebPage>
