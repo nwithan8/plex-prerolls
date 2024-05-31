@@ -1,6 +1,6 @@
 # Plex Prerolls
 
-<img src="https://raw.githubusercontent.com/nwithan8/plex-prerolls/master/documentation/images/logo.png" alt="logo">
+<img src="https://raw.githubusercontent.com/nwithan8/plex-prerolls/main/documentation/images/logo.png" alt="logo">
 
 A script to automate management of Plex pre-rolls.
 
