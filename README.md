@@ -1,16 +1,8 @@
-# Plex Prerolls
-
-<img src="https://raw.githubusercontent.com/nwithan8/plex-prerolls/main/documentation/images/logo.png" alt="logo">
-
-A script to automate management of Plex pre-rolls.
-
-Define when you want different pre-rolls to play throughout the year. For example:
-
-- Holiday pre-roll rotations
-- Special occasions
-- Seasonal rotations
-- Breaking up the monotony
-- Keeping your family on their toes!
+<div align="center">
+<img src="https://raw.githubusercontent.com/nwithan8/plex-prerolls/main/documentation/images/logo.png" alt="logo" width="300">
+<h1>Plex Prerolls</h1>
+<p>A script to automate management of Plex pre-rolls.</p>
+</div>
 
 ---
 
