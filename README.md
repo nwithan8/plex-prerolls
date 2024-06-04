@@ -110,7 +110,7 @@ Any entry whose schedule falls within the current date/time at the time of execu
 You can define as many schedules as you want, in the following categories (order does not matter):
 
 1. **always**: Items listed here will always be included (appended) to the preroll list
-    - If you have a large set of prerolls, you can provide all paths and use `random_count` to randomly select a smaller
+    - If you have a large set of prerolls, you can provide all paths and use `count` to randomly select a smaller
       subset of the list to use on each run.
 
 2. **date_range**: Schedule based on a specific date/time range (including [wildcards](#date-range-section-scheduling))
