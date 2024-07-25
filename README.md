@@ -311,3 +311,15 @@ Schedule as frequently as needed for your schedule (ex: hourly, daily, weekly, e
 ## Shout out to places to get Pre-Roll
 
 - <a href="https://prerolls.video" target="_blank"><https://prerolls.video></a>
+
+---
+
+## FAQ
+
+**Can this work with Jellyfin?**
+
+Jellyfin has an [Intros plugin](https://github.com/jellyfin/jellyfin-plugin-intros) that already replicates this functionality, in terms of setting rules (including based on schedule, as well as based on the about-to-play media item) for prerolls. I recommend using that plugin instead.
+
+**Can this work with Emby?**
+
+Emby has a [Cinema Intros plugin](https://emby.media/support/articles/Cinema-Intros.html) with a similar ["list of videos" option](https://emby.media/support/articles/Cinema-Intros.html#custom-intros). Currently, there is **no way** to update this setting via Emby's API, so there is no way to automate this process. I am in communication with the Emby development team to see if this feature can be added.
