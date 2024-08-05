@@ -3,7 +3,7 @@ services:
   plex_prerolls:
     image: nwithan8/plex_prerolls:latest
     volumes:
-      - /path/to/config:/
+      - /path/to/config:/config
       - /path/to/logs:/logs
     environment:
       CRON_SCHEDULE: "0 0 * * *" # Run every day at midnight, see https://crontab.guru/ for help
