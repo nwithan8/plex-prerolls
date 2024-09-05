@@ -36,6 +36,7 @@ class ScheduleManager:
                         advanced_settings=self._config.advanced),
                     weight=month.weight,
                     disable_always=month.disable_always))
+
         if self._config.date_ranges.enabled:
             for date_range in self._config.date_ranges.ranges:
                 entry = models.schedule_entry_from_date_range(
