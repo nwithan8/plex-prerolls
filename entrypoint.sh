@@ -19,4 +19,4 @@ echo "Dry run flag: $DRY_RUN_FLAG"
 
 # Run script
 echo "Running script"
-python3 /run.py -c /config/config.yaml -l /logs -s "$CRON_SCHEDULE" $DRY_RUN_FLAG
+python3 /run.py -c /config/config.yaml -l /logs -r /renders -s "$CRON_SCHEDULE" $DRY_RUN_FLAG

@@ -1,7 +1,8 @@
 from typing import List, Union, Tuple
 
-from plexapi.server import PlexServer
 from plexapi.exceptions import BadRequest
+from plexapi.server import PlexServer
+from plexapi.video import Movie
 
 import modules.logs as logging
 
@@ -50,3 +51,16 @@ class PlexConnector:
             return
 
         logging.info("Successfully updated pre-roll")
+
+    def get_movie(self, item_key: str) -> Union[None, Movie]:
+        """
+        Get a movie from the Plex server
+
+        :param item_key: The key of the movie, should start with "/library/metadata/"
+        :return: The movie object or None
+        """
+        try:
+            return self._plex_server.fetchItem(ekey=item_key)
+        except Exception as e:
+            logging.error(f"Failed to get movie: {e}")
+            return None

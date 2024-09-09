@@ -1,9 +1,60 @@
+import os
 from datetime import datetime, timedelta, date
 from typing import Tuple, Union
 
 from pytz import timezone
 
 import modules.logs as logging
+
+
+def get_temporary_directory_path(sub_directory: str = None, parent_directory: str = None) -> str:
+    """
+    Return a temporary directory path
+
+    :param sub_directory: (Optional) subdirectory to use
+    :type sub_directory: str, optional
+    :param parent_directory: (Optional) parent directory to use
+    :type parent_directory: str, optional
+    :return: temporary directory path
+    :rtype: str
+    """
+    base = parent_directory or "/tmp"
+
+    if sub_directory:
+        base = os.path.join(base, sub_directory)
+
+    path = os.path.join(base, os.urandom(24).hex())
+
+    os.makedirs(path, exist_ok=True)
+
+    return path
+
+
+def get_temporary_file_path(sub_directory: str = None, parent_directory: str = None, file_extension: str = None) -> str:
+    """
+    Return a temporary file path
+
+    :param sub_directory: (Optional) subdirectory to use
+    :type sub_directory: str, optional
+    :param parent_directory: (Optional) parent directory to use
+    :type parent_directory: str, optional
+    :param file_extension: (Optional) file extension to use
+    :type file_extension: str, optional
+    :return: temporary file path
+    :rtype: str
+    """
+    base = parent_directory or "/tmp"
+
+    if sub_directory:
+        base = os.path.join(base, sub_directory)
+
+    os.makedirs(base, exist_ok=True)
+
+    return os.path.join(base, f"{os.urandom(24).hex()}{file_extension or '.tmp'}")
+
+
+def get_current_directory() -> str:
+    return os.getcwd()
 
 
 def make_plural(word, count: int, suffix_override: str = 's') -> str:
@@ -31,6 +82,21 @@ def milliseconds_to_minutes_seconds(milliseconds: int) -> str:
     return f"{minutes}:{seconds}"
 
 
+def milliseconds_to_hours_minutes_seconds(milliseconds: int) -> str:
+    seconds = int(milliseconds / 1000)
+    hours = int(seconds / 3600)
+    if hours < 10:
+        hours = f"0{hours}"
+    seconds = int(seconds % 3600)
+    minutes = int(seconds / 60)
+    if minutes < 10:
+        minutes = f"0{minutes}"
+    seconds = int(seconds % 60)
+    if seconds < 10:
+        seconds = f"0{seconds}"
+    return f"{hours}:{minutes}:{seconds}"
+
+
 def now(timezone_code: str = None) -> datetime:
     if timezone_code:
         return datetime.now(timezone(timezone_code))  # will raise exception if invalid timezone_code
@@ -43,6 +109,10 @@ def now_plus_milliseconds(milliseconds: int, timezone_code: str = None) -> datet
     else:
         _now = datetime.now()
     return _now + timedelta(milliseconds=milliseconds)
+
+
+def now_epoch() -> int:
+    return int(datetime.now().timestamp())
 
 
 def now_in_range(start: datetime, end: datetime) -> bool:

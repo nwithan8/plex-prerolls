@@ -21,6 +21,9 @@ COPY config.yaml* /config/
 # Make Docker /logs volume for log file
 VOLUME /logs
 
+# Make Docker /render volume for rendered files
+VOLUME /renders
+
 # Copy source code from build machine to WORKDIR (/app) folder
 COPY . .
 

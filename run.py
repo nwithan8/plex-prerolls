@@ -15,6 +15,7 @@ from consts import (
     APP_DESCRIPTION,
     DEFAULT_CONFIG_PATH,
     DEFAULT_LOG_DIR,
+    DEFAULT_RENDERS_DIR,
     CONSOLE_LOG_LEVEL,
     FILE_LOG_LEVEL,
     FLASK_ADDRESS,
@@ -23,7 +24,7 @@ from consts import (
 from modules.config_parser import Config
 from modules.plex_connector import PlexConnector
 from modules.schedule_manager import ScheduleManager
-from modules.webhook_processor import WebhookProcessor
+from modules.webhooks.webhook_processor import WebhookProcessor
 
 parser = argparse.ArgumentParser(description=f"{APP_NAME} - {APP_DESCRIPTION}")
 
@@ -31,6 +32,8 @@ parser.add_argument("-c", "--config", help=f"Path to config file. Defaults to '{
                     default=DEFAULT_CONFIG_PATH)
 parser.add_argument("-l", "--log", help=f"Log file directory. Defaults to '{DEFAULT_LOG_DIR}'",
                     default=DEFAULT_LOG_DIR)  # Should include trailing backslash
+parser.add_argument("-r", "--renders", help=f"Path to renders directory. Defaults to '{DEFAULT_RENDERS_DIR}'",
+                    default=DEFAULT_RENDERS_DIR)
 parser.add_argument("-s", "--schedule", help="Cron pattern for pre-roll update", default="0 0 * * *")
 parser.add_argument("-d", "--dry-run", help="Dry run, no real changes made", action="store_true")
 
@@ -66,7 +69,7 @@ def start_webhooks_server(config: Config) -> [Flask, threading.Thread]:
 
     @api.route('/recently-added', methods=['POST'])
     def recently_added():
-        return WebhookProcessor.process_recently_added(request=flask_request, config=config)
+        return WebhookProcessor.process_recently_added(request=flask_request, config=config, output_dir=args.renders)
 
     flask_thread = threading.Thread(
         target=lambda: api.run(host=FLASK_ADDRESS, port=FLASK_PORT, debug=True, use_reloader=False))
@@ -114,4 +117,4 @@ if __name__ == '__main__':
     logging.info(f"Starting {APP_NAME}...")
 
     _api, _flask_thread = start_webhooks_server(config=_config)
-    _updater_thread = start_pre_roll_cronjob(config=_config)
+    # _updater_thread = start_pre_roll_cronjob(config=_config)
