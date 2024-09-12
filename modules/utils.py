@@ -1,4 +1,5 @@
 import os
+import shutil
 from datetime import datetime, timedelta, date
 from typing import Tuple, Union
 
@@ -55,6 +56,17 @@ def get_temporary_file_path(sub_directory: str = None, parent_directory: str = N
 
 def get_current_directory() -> str:
     return os.getcwd()
+
+
+def delete_directory(directory: str):
+    """
+    Delete a directory
+
+    :param directory: directory to delete
+    :type directory: str
+    """
+    if os.path.exists(directory):
+        shutil.rmtree(directory)
 
 
 def make_plural(word, count: int, suffix_override: str = 's') -> str:

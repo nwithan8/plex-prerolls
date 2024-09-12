@@ -1,5 +1,5 @@
 import textwrap
-from typing import Union
+from typing import Union, Tuple
 
 import ffmpeg
 import requests
@@ -53,11 +53,11 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
 
     @property
     def youtube_search_query_movie_title(self) -> str:
-        return f"'{self.movie_title}' {self.movie_year or ''}".strip()
+        return f'"{self.movie_title}" {self.movie_year or ''}'.strip()
 
     def _get_trailer(self) -> str:
         search_query = f"{self.youtube_search_query_movie_title} Official Movie Theatrical Trailer"
-        logging.info(f"Retrieving trailer for '{self.movie_title}', YouTube search query: '{search_query}'")
+        logging.info(f'Retrieving trailer for "{self.movie_title}", YouTube search query: "{search_query}"')
         video_id = ytd.run_youtube_search(
             query=f"{self.youtube_search_query_movie_title} Official Movie Theatrical Trailer",
             selector_function=ytd.SelectorPresets.select_first_video,
@@ -71,7 +71,7 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
 
     def _get_background_music(self) -> str:
         search_query = f"{self.youtube_search_query_movie_title} movie soundtrack"
-        logging.info(f"Retrieving background music for '{self.movie_title}', YouTube search query: '{search_query}'")
+        logging.info(f'Retrieving background music for "{self.movie_title}", YouTube search query: "{search_query}"')
         video_id = ytd.run_youtube_search(query=f"{self.youtube_search_query_movie_title} movie soundtrack",
                                           selector_function=ytd.SelectorPresets.select_first_video,
                                           results_limit=5)
@@ -83,7 +83,7 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
         return video_file_path
 
     def _get_movie_poster(self) -> Union[str, None]:
-        logging.info(f"Retrieving poster for '{self.movie_title}'")
+        logging.info(f'Retrieving poster for "{self.movie_title}"')
         if not self.movie_poster_url:
             logging.warning(f"No poster URL available for {self.movie_title}")
             return None
@@ -95,26 +95,26 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
         logging.info("Poster retrieved successfully")
         return file_path
 
-    def render(self):
+    def render(self) -> Tuple[Union[str, None], Union[str, None]]:
         if not self.movie_title:
             logging.warning("No movie title available, cannot build preroll")
-            return
+            return None, None
         if not self.movie_year:
             logging.warning("No movie year available, not going to attempt to build preroll")
-            return
+            return None, None
         if self.movie_year < 1980:
             # Finding good trailers automatically for movies older than 1980 is difficult (year is arbitrary)
             logging.warning("Movie is too old, not going to attempt to build preroll")
-            return
+            return None, None
 
         self.download_folder = utils.get_temporary_directory_path(parent_directory=self.download_folder)
-        logging.info(f"Retrieving assets for preroll of '{self.movie_title}', saving to {self.download_folder}")
+        logging.info(f'Retrieving assets for preroll of "{self.movie_title}", saving to {self.download_folder}')
         video_path = self._get_trailer()
         audio_path = self._get_background_music()
         audio_path = _trim_background_music(background_music_file_path=audio_path)
         poster_path = self._get_movie_poster()
 
-        logging.info(f"Rendering preroll for '{self.movie_title}'")
+        logging.info(f'Rendering preroll for "{self.movie_title}"')
         title_position_offset = (len(self.movie_title) * 33) / 2 - 7
         if title_position_offset > 716:
             title = textwrap.fill(self.movie_title, width=40, break_long_words=False)
@@ -213,11 +213,13 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
         ffmpeg_command = ffmpeg.overlay(ffmpeg_command, fade_out, eof_action="endall")
 
         # Combine video and audio
-        file_name = f"{self.download_folder}/{self._output_file_name}"
+        file_path = f"{self.download_folder}/{self._output_file_name}"
         ffmpeg_command = ffmpeg.output(ffmpeg_audio_command, ffmpeg_command,
-                                       file_name, )
+                                       file_path, )
 
         # Run ffmpeg command
         ffmpeg.run(ffmpeg_command, overwrite_output=True, quiet=False)
 
-        logging.info(f"Preroll for '{self.movie_title}' rendered successfully to {file_name}")
+        logging.info(f'Preroll for "{self.movie_title}" rendered successfully to {file_path}')
+
+        return self.download_folder, file_path

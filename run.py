@@ -69,6 +69,8 @@ def start_webhooks_server(config: Config) -> [Flask, threading.Thread]:
 
     @api.route('/recently-added', methods=['POST'])
     def recently_added():
+        if not config.advanced.auto_generation.recently_added.enabled:
+            return 'Recently added preroll generation is disabled', 200
         return WebhookProcessor.process_recently_added(request=flask_request, config=config, output_dir=args.renders)
 
     flask_thread = threading.Thread(
@@ -117,4 +119,4 @@ if __name__ == '__main__':
     logging.info(f"Starting {APP_NAME}...")
 
     _api, _flask_thread = start_webhooks_server(config=_config)
-    # _updater_thread = start_pre_roll_cronjob(config=_config)
+    _updater_thread = start_pre_roll_cronjob(config=_config)

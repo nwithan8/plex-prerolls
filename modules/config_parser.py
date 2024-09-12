@@ -6,6 +6,7 @@ import yaml
 
 import modules.files as files
 import modules.logs as logging
+from consts import RCLONE_CONFIG_FILE_DIRECTORY
 
 
 class YAMLElement:
@@ -179,6 +180,48 @@ class PathGlobbingConfig(ConfigSection):
         return self._get_value(key="plex_path", default="/")
 
 
+class RecentlyAddedAutoGenerationConfig(ConfigSection):
+    def __init__(self, data):
+        super().__init__(section_key="recently_added", data=data)
+
+    @property
+    def enabled(self) -> bool:
+        return self._get_value(key="enabled", default=False)
+
+    @property
+    def count(self) -> int:
+        return self._get_value(key="count", default=10)
+
+    @property
+    def remote_path(self) -> str:
+        return "Recently Added"
+
+
+class AutoGenerationConfig(ConfigSection):
+    def __init__(self, data):
+        super().__init__(section_key="auto_generation", data=data)
+
+    @property
+    def rclone_config_file_path(self) -> str:
+        return f"{RCLONE_CONFIG_FILE_DIRECTORY}/rclone.conf"
+
+    @property
+    def rclone_remote_name(self) -> str:
+        return self._get_value(key="rclone_remote_name", default="")
+
+    @property
+    def rclone_remote_path(self) -> str:
+        return self._get_value(key="rclone_remote_path", default="")
+
+    @property
+    def remote_path_parent(self) -> str:
+        return "Preroll Auto-Generated"
+
+    @property
+    def recently_added(self) -> RecentlyAddedAutoGenerationConfig:
+        return RecentlyAddedAutoGenerationConfig(data=self.data)
+
+
 class AdvancedConfig(ConfigSection):
     def __init__(self, data):
         super().__init__(section_key="advanced", data=data)
@@ -186,6 +229,10 @@ class AdvancedConfig(ConfigSection):
     @property
     def path_globbing(self) -> PathGlobbingConfig:
         return PathGlobbingConfig(data=self.data)
+
+    @property
+    def auto_generation(self) -> AutoGenerationConfig:
+        return AutoGenerationConfig(data=self.data)
 
 
 class ScheduleSection(ConfigSection):

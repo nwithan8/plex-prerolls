@@ -1,4 +1,5 @@
-FROM python:3.11-alpine3.18
+# Node.js 18.19 and Python 3.11.x pre-installed on Alpine Linux 3.19
+FROM nwithan8/python-3.x-node-18.19.0-alpine3.19:latest
 WORKDIR /
 
 # Install Python and other utilities
@@ -23,6 +24,9 @@ VOLUME /logs
 
 # Make Docker /render volume for rendered files
 VOLUME /renders
+
+# Make Docker /rclone volume for rclone config file
+VOLUME /rclone
 
 # Copy source code from build machine to WORKDIR (/app) folder
 COPY . .

@@ -8,11 +8,12 @@ from flask import (
 )
 from plexapi.video import Movie
 
+import modules.logs as logging
+from modules import rclone_utils, utils
 from modules.config_parser import Config
 from modules.plex_connector import PlexConnector
 from modules.renderers import RecentlyAddedPrerollRenderer
 from modules.webhooks.plex import PlexWebhook, PlexWebhookEventType, PlexWebhookMetadataType
-import modules.logs as logging
 
 
 class WebhookProcessor:
@@ -63,12 +64,39 @@ class WebhookProcessor:
         Process the preroll render for a recently added webhook.
         """
         plex_connector = PlexConnector(host=config.plex.url, token=config.plex.token)
-        logging.info(f"Retrieving information from Plex for recently added movie: '{webhook.metadata.title}'")
+        logging.info(f'Retrieving information from Plex for recently added movie: "{webhook.metadata.title}"')
         plex_movie: Movie = plex_connector.get_movie(item_key=webhook.metadata.key)
         if not plex_movie:
-            logging.warning(f"Could not find movie in Plex: '{webhook.metadata.title}'")  # Not an error, just a warning
+            logging.warning(f'Could not find movie in Plex: "{webhook.metadata.title}"')  # Not an error, just a warning
             return
 
         renderer = RecentlyAddedPrerollRenderer(render_folder=output_dir,
                                                 movie=plex_movie)
-        renderer.render()
+        asset_folder, local_file_path = renderer.render()
+
+        if not local_file_path:  # error has already been logged
+            return
+
+        rclone_config_file_path = config.advanced.auto_generation.rclone_config_file_path
+        rclone_remote_name = config.advanced.auto_generation.rclone_remote_name
+        rclone_remote_path = f"{config.advanced.auto_generation.rclone_remote_path}/{config.advanced.auto_generation.remote_path_parent}/{config.advanced.auto_generation.recently_added.remote_path}"
+
+        logging.info(f"Copying preroll to remote directory: '{rclone_remote_path}'")
+        rclone_utils.copy_local_file_to_remote_directory(local_file_path=local_file_path,
+                                                         rclone_remote=rclone_remote_name,
+                                                         rclone_path=rclone_remote_path,
+                                                         rclone_config_path=rclone_config_file_path)
+        remote_files_to_delete = rclone_utils.get_all_files_in_directory_beyond_most_recent_x_count(
+            rclone_remote=rclone_remote_name,
+            rclone_path=rclone_remote_path,
+            rclone_config_path=rclone_config_file_path,
+            count=config.advanced.auto_generation.recently_added.count)
+        logging.info(
+            f"Deleting {len(remote_files_to_delete)} prerolls from remote directory to maintain {config.advanced.auto_generation.recently_added.count} auto-generated prerolls limit")
+        for remote_file in remote_files_to_delete:
+            rclone_utils.delete_remote_file(rclone_remote=rclone_remote_name,
+                                            rclone_path=remote_file,
+                                            rclone_config_path=rclone_config_file_path)
+
+        logging.info(f"Cleaning up local preroll assets folder: '{asset_folder}'")
+        utils.delete_directory(directory=asset_folder)
