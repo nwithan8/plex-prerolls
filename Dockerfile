@@ -2,16 +2,13 @@
 FROM nwithan8/python-3.x-node-18.19.0-alpine3.19:latest
 WORKDIR /
 
-# Install Python and other utilities
-RUN apk add --no-cache --update alpine-sdk git wget python3 python3-dev ca-certificates musl-dev libc-dev gcc bash nano linux-headers && \
-    python3 -m ensurepip && \
-    pip3 install --no-cache-dir --upgrade pip setuptools
-
 # Copy requirements.txt from build machine to WORKDIR (/app) folder (important we do this BEFORE copying the rest of the files to avoid re-running pip install on every code change)
 COPY requirements.txt requirements.txt
 
+# Python virtual environment already exists in base image as /app/venv
+
 # Install Python requirements
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN LIBRARY_PATH=/lib:/usr/lib /bin/sh -c "/app/venv/bin/pip install --no-cache-dir -r requirements.txt"
 
 # Make Docker /config volume for optional config file
 VOLUME /config
@@ -25,8 +22,8 @@ VOLUME /logs
 # Make Docker /render volume for rendered files
 VOLUME /renders
 
-# Make Docker /rclone volume for rclone config file
-VOLUME /rclone
+# Make Docker /auto-rolls volume for completed auto-rolls files
+VOLUME /auto_rolls
 
 # Copy source code from build machine to WORKDIR (/app) folder
 COPY . .
@@ -34,7 +31,7 @@ COPY . .
 # Delete unnecessary files in WORKDIR (/app) folder (not caught by .dockerignore)
 RUN echo "**** removing unneeded files ****"
 # Remove all files except .py files and entrypoint.sh (keep all directories)
-RUN find / -type f -maxdepth 1 ! -name '*.py' ! -name 'entrypoint.sh' -delete
+# RUN find / -type f -maxdepth 1 ! -name '*.py' ! -name 'entrypoint.sh' -delete
 
 # Run entrypoint.sh script
 ENTRYPOINT ["sh", "/entrypoint.sh"]

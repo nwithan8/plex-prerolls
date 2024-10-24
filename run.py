@@ -109,7 +109,7 @@ def pre_roll_update(cron_pattern: str, config: Config):
         all_valid_paths = schedule_manager.all_valid_paths
 
         plex_connector = PlexConnector(host=config.plex.url, token=config.plex.token)
-        # plex_connector.update_pre_roll_paths(paths=all_valid_paths, testing=args.dry_run)
+        plex_connector.update_pre_roll_paths(paths=all_valid_paths, testing=args.dry_run)
 
         sleep(60)  # Sleep at least a minute to avoid running multiple times in the same minute
 

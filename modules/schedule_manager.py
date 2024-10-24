@@ -15,6 +15,7 @@ class ScheduleManager:
         self.monthly_schedules: List[ScheduleEntry] = []
         self.date_range_schedules: List[ScheduleEntry] = []
         self.always_schedules: List[ScheduleEntry] = []
+        self.auto_generated_schedules: List[ScheduleEntry] = []
         self._parse_schedules()  # Only call this once, otherwise it will duplicate schedules
 
     def _parse_schedules(self):
@@ -57,6 +58,13 @@ class ScheduleManager:
                 count=self._config.always.random_count(
                     advanced_settings=self._config.advanced),
                 weight=self._config.always.weight))
+
+        if self._config.advanced.auto_generation.recently_added.enabled:
+            self.auto_generated_schedules.append(models.schedule_entry_from_auto_generated(
+                name="Recently Added",
+                paths=self._config.advanced.auto_generation.recently_added.all_paths(
+                    advanced_settings=self._config.advanced),
+                weight=1))
 
     @property
     def valid_weekly_schedules(self) -> List[ScheduleEntry]:
@@ -122,7 +130,23 @@ class ScheduleManager:
         return valid_schedules
 
     @property
+    def valid_auto_generated_schedules(self) -> List[ScheduleEntry]:
+        return [schedule for schedule in self.auto_generated_schedules if schedule.should_be_used]
+
+    @property
+    def valid_auto_generated_schedule_count(self) -> int:
+        return len(self.valid_auto_generated_schedules)
+
+    @property
+    def auto_generated_schedules_log_message(self) -> str:
+        valid_schedules = ""
+        for schedule in self.valid_auto_generated_schedules:
+            valid_schedules += f"- {schedule.name}\n"
+        return valid_schedules
+
+    @property
     def all_schedules_except_always(self) -> List[ScheduleEntry]:
+        # Auto generated schedules are not included, considered "Always"
         return self.weekly_schedules + self.monthly_schedules + self.date_range_schedules
 
     @property
@@ -139,6 +163,7 @@ class ScheduleManager:
 
         if not self.disable_always:
             schedules += self.always_schedules
+            schedules += self.auto_generated_schedules
 
         return schedules
 
@@ -173,4 +198,6 @@ Weekly - {self.valid_weekly_schedule_count}
 Monthly - {self.valid_monthly_schedule_count}
 {self.valid_monthly_schedule_log_message}
 Date Ranges - {self.valid_date_range_schedule_count}
-{self.valid_date_range_schedule_log_message}"""
+{self.valid_date_range_schedule_log_message}
+Auto Generated - {"Disabled by other schedule(s)" if self.disable_always else self.valid_auto_generated_schedule_count}
+{self.auto_generated_schedules_log_message}"""

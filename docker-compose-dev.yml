@@ -1,7 +1,9 @@
 version: "3.9"
 services:
   plex_prerolls:
-    image: nwithan8/plex_prerolls:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
       - /path/to/config:/config
       - /path/to/logs:/logs

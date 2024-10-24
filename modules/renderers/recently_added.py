@@ -6,7 +6,7 @@ import requests
 from plexapi.video import Movie
 
 import modules.logs as logging
-from consts import ASSETS_DIR
+from consts import ASSETS_DIR, AUTO_GENERATED_RECENTLY_ADDED_PREROLL_PREFIX
 from modules import youtube_downloader as ytd, utils, ffmpeg_utils
 from modules.renderers.base import PrerollRenderer
 
@@ -36,7 +36,7 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
         self._audio_file_name = "audio"
         self._poster_file_name = "poster.jpg"
         # Needs to end with epoch timestamp to sort correctly during rclone sync
-        self._output_file_name = f"recently-added-preroll-{utils.now_epoch()}.mp4"
+        self._output_file_name = f"{AUTO_GENERATED_RECENTLY_ADDED_PREROLL_PREFIX}-{utils.now_epoch()}.mp4"
         self.movie_title = movie.title
         self.movie_year = getattr(movie, "year", None)
         duration_milliseconds = getattr(movie, "duration", 0)
@@ -53,7 +53,7 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
 
     @property
     def youtube_search_query_movie_title(self) -> str:
-        return f'"{self.movie_title}" {self.movie_year or ''}'.strip()
+        return f'"{self.movie_title}" {self.movie_year or ""}'.strip()
 
     def _get_trailer(self) -> str:
         search_query = f"{self.youtube_search_query_movie_title} Official Movie Theatrical Trailer"

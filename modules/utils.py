@@ -58,6 +58,40 @@ def get_current_directory() -> str:
     return os.getcwd()
 
 
+def copy_file(source: str, destination: str):
+    """
+    Copy a file
+
+    :param source: source file to copy
+    :type source: str
+    :param destination: destination file to copy to
+    :type destination: str
+    """
+    shutil.copy(source, destination)
+
+
+def move_file(source: str, destination: str):
+    """
+    Move a file
+
+    :param source: source file to move
+    :type source: str
+    :param destination: destination file to move to
+    :type destination: str
+    """
+    shutil.move(source, destination)
+
+
+def create_directory(directory: str):
+    """
+    Create a directory
+
+    :param directory: directory to create
+    :type directory: str
+    """
+    os.makedirs(directory, exist_ok=True)
+
+
 def delete_directory(directory: str):
     """
     Delete a directory
@@ -67,6 +101,49 @@ def delete_directory(directory: str):
     """
     if os.path.exists(directory):
         shutil.rmtree(directory)
+
+
+def delete_file(file: str):
+    """
+    Delete a file
+
+    :param file: file to delete
+    :type file: str
+    """
+    if os.path.exists(file):
+        os.remove(file)
+
+
+def get_x_most_recent_files(directory: str, count: int) -> list:
+    """
+    Get the most recent files in a directory
+
+    :param directory: directory to search
+    :type directory: str
+    :param count: number of files to return
+    :type count: int
+    :return: list of files
+    :rtype: list
+    """
+    files = os.listdir(directory)
+    files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
+    return files[:count]
+
+
+def get_all_files_in_directory_beyond_most_recent_x_count(directory: str, count: int) -> list:
+    """
+    Get all files in a directory beyond the most recent x count
+
+    :param directory: directory to search
+    :type directory: str
+    :param count: number of most recent files to keep
+    :type count: int
+    :return: list of files
+    :rtype: list
+    """
+    files = os.listdir(directory)
+    files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
+    return files[count:]
 
 
 def make_plural(word, count: int, suffix_override: str = 's') -> str:

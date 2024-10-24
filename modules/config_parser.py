@@ -6,7 +6,7 @@ import yaml
 
 import modules.files as files
 import modules.logs as logging
-from consts import RCLONE_CONFIG_FILE_DIRECTORY
+from consts import AUTO_GENERATED_PREROLLS_DIR, AUTO_GENERATED_RECENTLY_ADDED_PREROLL_PREFIX
 
 
 class YAMLElement:
@@ -181,7 +181,8 @@ class PathGlobbingConfig(ConfigSection):
 
 
 class RecentlyAddedAutoGenerationConfig(ConfigSection):
-    def __init__(self, data):
+    def __init__(self, data, parent: 'AutoGenerationConfig'):
+        self._parent = parent
         super().__init__(section_key="recently_added", data=data)
 
     @property
@@ -193,8 +194,27 @@ class RecentlyAddedAutoGenerationConfig(ConfigSection):
         return self._get_value(key="count", default=10)
 
     @property
-    def remote_path(self) -> str:
-        return "Recently Added"
+    def remote_files_root(self) -> str:
+        # The Plex-aware equivalent of the local (internal) path where auto-generated prerolls will be stored
+        return f"{self._parent.remote_path_root}/Recently Added"
+
+    @property
+    def local_files_root(self) -> str:
+        # The local (internal) path where auto-generated prerolls will be stored
+        return f"{self._parent.local_path_root}/Recently Added"
+
+    # Double inheritance doesn't work well with conflicting "data" properties, just re-implement these two functions.
+    def all_paths(self, advanced_settings: 'AdvancedConfig' = None) -> List[str]:
+        paths = []
+
+        local_files = files.get_all_files_matching_glob_pattern(directory=self.local_files_root, pattern=f"{AUTO_GENERATED_RECENTLY_ADDED_PREROLL_PREFIX}*")
+        for local_file in local_files:
+            remote_file = files.translate_local_path_to_remote_path(local_path=local_file,
+                                                                    local_root_folder=self.local_files_root,
+                                                                    remote_root_folder=self.remote_files_root)
+            paths.append(remote_file)
+
+        return paths
 
 
 class AutoGenerationConfig(ConfigSection):
@@ -202,24 +222,18 @@ class AutoGenerationConfig(ConfigSection):
         super().__init__(section_key="auto_generation", data=data)
 
     @property
-    def rclone_config_file_path(self) -> str:
-        return f"{RCLONE_CONFIG_FILE_DIRECTORY}/rclone.conf"
+    def remote_path_root(self) -> str:
+        # The Plex-aware equivalent of the local (internal) path where auto-generated prerolls will be stored
+        return self._get_value(key="plex_path", default=self.local_path_root)
 
     @property
-    def rclone_remote_name(self) -> str:
-        return self._get_value(key="rclone_remote_name", default="")
-
-    @property
-    def rclone_remote_path(self) -> str:
-        return self._get_value(key="rclone_remote_path", default="")
-
-    @property
-    def remote_path_parent(self) -> str:
-        return "Preroll Auto-Generated"
+    def local_path_root(self) -> str:
+        # The local (internal) path where auto-generated prerolls will be stored
+        return AUTO_GENERATED_PREROLLS_DIR
 
     @property
     def recently_added(self) -> RecentlyAddedAutoGenerationConfig:
-        return RecentlyAddedAutoGenerationConfig(data=self.data)
+        return RecentlyAddedAutoGenerationConfig(data=self.data, parent=self)
 
 
 class AdvancedConfig(ConfigSection):
