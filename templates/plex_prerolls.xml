@@ -7,7 +7,7 @@
         <Tag>latest</Tag>
         <TagDescription>Latest stable release</TagDescription>
     </Branch>
-    <Network>host</Network>
+    <Network>bridge</Network>
     <Shell>bash</Shell>
     <Privileged>false</Privileged>
     <Support>https://github.com/nwithan8/plex-prerolls/issues</Support>
@@ -21,7 +21,7 @@
     </Maintainer>
     <Config Name="Cron Schedule" Target="CRON_SCHEDULE" Default="0 0 * * *" Description="How often to update schedules. See https://crontab.guru for help." Type="Variable" Display="always" Required="true" Mask="false">0 0 * * *</Config>
     <Config Name="Dry Run" Target="DRY_RUN" Default="false|true" Description="Enable dry-run (testing) mode. No changes will be made to Plex." Type="Variable" Display="always" Required="false" Mask="false" />
-    <Config Name="Webhooks Port" Target="8283" Default="8283" Description="Port to listen for webhooks" Type="Variable" Display="always" Required="false" Mask="false">8283</Config>
+    <Config Name="Webhooks Port" Target="8283" Default="8283" Description="Port to listen for webhooks" Type="Port" Display="always" Required="false" Mask="false">8283</Config>
     <Config Name="Files Path" Target="/files" Default="/mnt/user/appdata/plex_prerolls/files" Mode="ro" Description="(Optional) Where preroll files are stored, for local path glob feature" Type="Path" Display="always" Required="false" Mask="false">/mnt/user/appdata/plex_prerolls/files</Config>
     <Config Name="Auto-Generated Prerolls Path" Target="/auto_rolls" Default="" Mode="rw" Description="(Optional) Where auto-generated prerolls will be stored" Type="Path" Display="always" Required="false" Mask="false" />
     <Config Name="Timezone" Target="TZ" Default="UTC" Description="Timezone to use when calculating schedules" Type="Variable" Display="always" Required="false" Mask="false">UTC</Config>
