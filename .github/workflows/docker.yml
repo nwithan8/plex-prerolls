@@ -29,6 +29,7 @@ jobs:
         run: |
           echo "app_name=plex_prerolls" >> "$GITHUB_OUTPUT"
           echo "version=${{ github.event.inputs.version || github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          echo "major_version=$(echo ${{ steps.vars.outputs.version || github.event.release.tag_name }} | cut -d '.' -f 1)" >> "$GITHUB_OUTPUT"
           echo "today=$(date +'%Y-%m-%d')" >> "$GITHUB_OUTPUT"
           echo "year=$(date +'%Y')" >> "$GITHUB_OUTPUT"
 
@@ -77,8 +78,10 @@ jobs:
           tags: |
             nwithan8/${{ steps.vars.outputs.app_name }}:latest
             nwithan8/${{ steps.vars.outputs.app_name }}:${{ steps.vars.outputs.version }}
+            nwithan8/${{ steps.vars.outputs.app_name }}:${{ steps.vars.outputs.major_version }}
             ghcr.io/nwithan8/${{ steps.vars.outputs.app_name }}:latest
             ghcr.io/nwithan8/${{ steps.vars.outputs.app_name }}:${{ steps.vars.outputs.version }}
+            ghcr.io/nwithan8/${{ steps.vars.outputs.app_name }}:${{ steps.vars.outputs.major_version }}
           labels: |
             org.opencontainers.image.title=${{ steps.vars.outputs.app_name }}
             org.opencontainers.image.version=${{ steps.vars.outputs.version }}

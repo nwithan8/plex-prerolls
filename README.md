@@ -10,52 +10,8 @@
 
 ### Run Script Directly
 
-#### Requirements
-
-- Python 3.8+
-
-Clone the repo:
-
-```sh
-git clone https://github.com/nwithan8/plex-prerolls.git
-```
-
-Install Python requirements:
-
-```sh
-pip install -r requirements.txt
-```
-
-Copy `config.yaml.example` to `config.yaml`, provide your `plex` details and [edit your schedule](#schedule-rules).
-
-Run the script:
-
-```sh
-python run.py
-```
-
-#### Advanced Usage
-
-```sh
-$ python run.py -h
-
-usage: run.py [-h] [-c CONFIG] [-l LOG] [-d]
-
-Plex Prerolls - A tool to manage prerolls for Plex
-
-options:
-  -h, --help            show this help message and exit
-  -c CONFIG, --config CONFIG
-                        Path to config file. Defaults to 'config.yaml'
-  -l LOG, --log LOG     Log file directory. Defaults to 'logs/'
-  -d, --dry-run         Dry run, no real changes made
-```
-
-##### Example
-
-```sh
-python run.py -c path/to/custom/config.yaml -l path/to/custom/log/directory/ # Trailing slash required
-```
+With the introduction of webhook ingestion and auto-generation of prerolls, it is no longer advised to run this
+application as a direct Python script. Please use the [Docker container](#run-as-docker-container) instead.
 
 ### Run as Docker Container
 
@@ -76,23 +32,30 @@ docker-compose up -d
 ```sh
 docker run -d \
   --name=plex_prerolls \
+  -p 8283:8283 \
   -e PUID=1000 \
   -e PGID=1000 \
   -e TZ=Etc/UTC \
   -e CRON_SCHEDULE="0 0 * * *" \
+  -e DRY_RUN=false \
   -v /path/to/config:/ \
   -v /path/to/logs:/logs \
+  -v /path/to/preroll/files:/files \
+  -v /path/to/auto-generated/rolls/temp:/renders \
+  -v /path/to/auto-generated/rolls/parent:/auto_rolls \
   --restart unless-stopped \
   nwithan8/plex_prerolls:latest
 ```
 
 #### Paths and Environment Variables
 
-| Path                     | Description                                                                                   |
-|--------------------------|-----------------------------------------------------------------------------------------------|
-| `/config`                | Path to config directory (`config.yaml` should be in this directory)                          |
-| `/logs`                  | Path to log directory (`Plex Prerolls.log` will be in this directory)                         |
-| `/path/to/preroll/files` | Path to the root directory of all preroll files (for [Path Globbing](#path-globbing) feature) |
+| Path          | Description                                                                                                                  |
+|---------------|------------------------------------------------------------------------------------------------------------------------------|
+| `/config`     | Path to config directory (`config.yaml` should be in this directory)                                                         |
+| `/logs`       | Path to log directory (`Plex Prerolls.log` will be in this directory)                                                        |
+| `/files`      | Path to the root directory of all preroll files (for [Path Globbing](#path-globbing) feature)                                |
+| `/auto_rolls` | Path to the root directory where all [auto-generated prerolls files](#auto-generation) will be stored                        |
+| `/renders`    | Path to where [auto-generated prerolls](#auto-generation) and associated assets will be temporarily stored during generation |
 
 | Environment Variable | Description                                                       |
 |----------------------|-------------------------------------------------------------------|
@@ -100,6 +63,7 @@ docker run -d \
 | `PGID`               | GID of user to run as                                             |
 | `TZ`                 | Timezone to use for cron schedule                                 |
 | `CRON_SCHEDULE`      | Cron schedule to run script (see <https://crontab.guru> for help) |
+| `DRY_RUN`            | Don't actually make changes to Plex prerolls, only simulate       |
 
 ---
 
@@ -207,7 +171,7 @@ You should [adjust your cron schedule](#scheduling-script) to run the script mor
 
 ### Path Globbing
 
-**NOTE**: This feature will only work if you are running the script/Docker container on the same machine as your Plex
+**NOTE**: This feature will only work if you are running the Docker container on the same machine as your Plex
 server.
 
 Instead of listing out each individual preroll file, you can use glob (wildcard) patterns to match multiple files in a
@@ -276,35 +240,35 @@ patterns.
 Please note that `paths` entries must be fully-qualified **remote** paths (as seen by Plex), while `path_globs` entries
 are relative to the **local** `root_path` directory.
 
----
+### Auto-Generation
 
-## Scheduling Script
+**NOTE**: This feature will only work if you are running the Docker container on the same machine as your Plex
+server.
 
-**NOTE:** Scheduling is handled automatically in the Docker version of this script via the `CRON_SCHEDULE` environment
-variable.
+**NOTE**: This feature relies on Plex webhooks, which require a Plex Pass subscription.
 
-### Linux
+Plex Prerolls can automatically generate prerolls, store the generated files in a specified directory and include them
+in the list of prerolls.
 
-Add to system scheduler:
+#### "Recently Added Media" Pre-Rolls
 
-```sh
-crontab -e
-```
+The application can generate trailer-like prerolls for each new media item added to your library (with a rolling total,
+defaults to 10 items).
 
-Place desired schedule (example below for every day at midnight)
+This is done by receiving a webhook from Plex when new media is added, retrieving a trailer and soundtrack (via YouTube)
+as well as poster and metadata for the media item, and generating a preroll from these assets.
 
-```sh
-0 0 * * * python /path/to/run.py >/dev/null 2>&1
-```
+Example of a generated preroll:
 
-You can also wrap the execution in a shell script (useful if running other scripts/commands, using venv encapsulation,
-customizing arguments, etc.)
+<img src="https://raw.githubusercontent.com/nwithan8/plex-prerolls/main/documentation/images/recently-added-preroll-example.png" alt="logo" width="300">
 
-```sh
-0 0 * * * /path/to/run_prerolls.sh >/dev/null 2>&1
-```
+##### Setup
 
-Schedule as frequently as needed for your schedule (ex: hourly, daily, weekly, etc.)
+[Set up a Plex webhook](https://support.plex.tv/articles/115002267687-webhooks/) to point to the application's
+`/recently-added` endpoint (e.g. `http://localhost:8283/recently-added`).
+
+Because this feature requires Plex Prerolls and Plex Media Server to be running on the same host machine, it is highly
+recommended to use internal networking (local IP addresses) rather than publicly exposing Plex Prerolls to the Internet.
 
 ---
 
@@ -318,8 +282,13 @@ Schedule as frequently as needed for your schedule (ex: hourly, daily, weekly, e
 
 **Can this work with Jellyfin?**
 
-Jellyfin has an [Intros plugin](https://github.com/jellyfin/jellyfin-plugin-intros) that already replicates this functionality, in terms of setting rules (including based on schedule, as well as based on the about-to-play media item) for prerolls. I recommend using that plugin instead.
+Jellyfin has an [Intros plugin](https://github.com/jellyfin/jellyfin-plugin-intros) that already replicates this
+functionality, in terms of setting rules (including based on schedule, as well as based on the about-to-play media item)
+for prerolls. I recommend using that plugin instead.
 
 **Can this work with Emby?**
 
-Emby has a [Cinema Intros plugin](https://emby.media/support/articles/Cinema-Intros.html) with a similar ["list of videos" option](https://emby.media/support/articles/Cinema-Intros.html#custom-intros). Currently, there is **no way** to update this setting via Emby's API, so there is no way to automate this process. I am in communication with the Emby development team to see if this feature can be added.
+Emby has a [Cinema Intros plugin](https://emby.media/support/articles/Cinema-Intros.html) with a
+similar ["list of videos" option](https://emby.media/support/articles/Cinema-Intros.html#custom-intros). Currently,
+there is **no way** to update this setting via Emby's API, so there is no way to automate this process. I am in
+communication with the Emby development team to see if this feature can be added.

@@ -1,9 +1,149 @@
+import os
+import shutil
 from datetime import datetime, timedelta, date
 from typing import Tuple, Union
 
 from pytz import timezone
 
 import modules.logs as logging
+
+
+def get_temporary_directory_path(sub_directory: str = None, parent_directory: str = None) -> str:
+    """
+    Return a temporary directory path
+
+    :param sub_directory: (Optional) subdirectory to use
+    :type sub_directory: str, optional
+    :param parent_directory: (Optional) parent directory to use
+    :type parent_directory: str, optional
+    :return: temporary directory path
+    :rtype: str
+    """
+    base = parent_directory or "/tmp"
+
+    if sub_directory:
+        base = os.path.join(base, sub_directory)
+
+    path = os.path.join(base, os.urandom(24).hex())
+
+    os.makedirs(path, exist_ok=True)
+
+    return path
+
+
+def get_temporary_file_path(sub_directory: str = None, parent_directory: str = None, file_extension: str = None) -> str:
+    """
+    Return a temporary file path
+
+    :param sub_directory: (Optional) subdirectory to use
+    :type sub_directory: str, optional
+    :param parent_directory: (Optional) parent directory to use
+    :type parent_directory: str, optional
+    :param file_extension: (Optional) file extension to use
+    :type file_extension: str, optional
+    :return: temporary file path
+    :rtype: str
+    """
+    base = parent_directory or "/tmp"
+
+    if sub_directory:
+        base = os.path.join(base, sub_directory)
+
+    os.makedirs(base, exist_ok=True)
+
+    return os.path.join(base, f"{os.urandom(24).hex()}{file_extension or '.tmp'}")
+
+
+def get_current_directory() -> str:
+    return os.getcwd()
+
+
+def copy_file(source: str, destination: str):
+    """
+    Copy a file
+
+    :param source: source file to copy
+    :type source: str
+    :param destination: destination file to copy to
+    :type destination: str
+    """
+    shutil.copy(source, destination)
+
+
+def move_file(source: str, destination: str):
+    """
+    Move a file
+
+    :param source: source file to move
+    :type source: str
+    :param destination: destination file to move to
+    :type destination: str
+    """
+    shutil.move(source, destination)
+
+
+def create_directory(directory: str):
+    """
+    Create a directory
+
+    :param directory: directory to create
+    :type directory: str
+    """
+    os.makedirs(directory, exist_ok=True)
+
+
+def delete_directory(directory: str):
+    """
+    Delete a directory
+
+    :param directory: directory to delete
+    :type directory: str
+    """
+    if os.path.exists(directory):
+        shutil.rmtree(directory)
+
+
+def delete_file(file: str):
+    """
+    Delete a file
+
+    :param file: file to delete
+    :type file: str
+    """
+    if os.path.exists(file):
+        os.remove(file)
+
+
+def get_x_most_recent_files(directory: str, count: int) -> list:
+    """
+    Get the most recent files in a directory
+
+    :param directory: directory to search
+    :type directory: str
+    :param count: number of files to return
+    :type count: int
+    :return: list of files
+    :rtype: list
+    """
+    files = os.listdir(directory)
+    files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
+    return files[:count]
+
+
+def get_all_files_in_directory_beyond_most_recent_x_count(directory: str, count: int) -> list:
+    """
+    Get all files in a directory beyond the most recent x count
+
+    :param directory: directory to search
+    :type directory: str
+    :param count: number of most recent files to keep
+    :type count: int
+    :return: list of files
+    :rtype: list
+    """
+    files = os.listdir(directory)
+    files.sort(key=lambda x: os.path.getmtime(os.path.join(directory, x)), reverse=True)
+    return files[count:]
 
 
 def make_plural(word, count: int, suffix_override: str = 's') -> str:
@@ -31,6 +171,21 @@ def milliseconds_to_minutes_seconds(milliseconds: int) -> str:
     return f"{minutes}:{seconds}"
 
 
+def milliseconds_to_hours_minutes_seconds(milliseconds: int) -> str:
+    seconds = int(milliseconds / 1000)
+    hours = int(seconds / 3600)
+    if hours < 10:
+        hours = f"0{hours}"
+    seconds = int(seconds % 3600)
+    minutes = int(seconds / 60)
+    if minutes < 10:
+        minutes = f"0{minutes}"
+    seconds = int(seconds % 60)
+    if seconds < 10:
+        seconds = f"0{seconds}"
+    return f"{hours}:{minutes}:{seconds}"
+
+
 def now(timezone_code: str = None) -> datetime:
     if timezone_code:
         return datetime.now(timezone(timezone_code))  # will raise exception if invalid timezone_code
@@ -43,6 +198,10 @@ def now_plus_milliseconds(milliseconds: int, timezone_code: str = None) -> datet
     else:
         _now = datetime.now()
     return _now + timedelta(milliseconds=milliseconds)
+
+
+def now_epoch() -> int:
+    return int(datetime.now().timestamp())
 
 
 def now_in_range(start: datetime, end: datetime) -> bool:

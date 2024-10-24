@@ -2,3 +2,9 @@ plexapi==4.13.*
 confuse~=1.7
 pytz~=2022.1
 PyYAML==6.0.*
+Flask~=3.0.2
+croniter==3.0.3
+ffmpeg-python==0.2.0
+youtube-search-python==1.6.6
+yt-dlp~=2024.8.6
+pydantic==2.9.0

@@ -45,7 +45,23 @@ def schedule_entry_from_always(paths: List[str], count: int, weight: int) -> Sch
                          name_prefix="Always")
 
 
-def schedule_entry_from_week_number(week_number: int, paths: List[str], weight: int, disable_always: bool = False) -> Union[ScheduleEntry, None]:
+def schedule_entry_from_auto_generated(name: str, paths: List[str], weight: int) -> ScheduleEntry:
+    # Always schedule
+    start_date = utils.make_midnight(utils.start_of_time())
+    end_date = utils.make_right_before_midnight(utils.end_of_time())
+
+    # Always use all paths available
+
+    return ScheduleEntry(type=ScheduleType.always.value,
+                         start_date=start_date,
+                         end_date=end_date,
+                         paths=paths,
+                         weight=weight,
+                         name_prefix=f"Auto Generated - {name}")
+
+
+def schedule_entry_from_week_number(week_number: int, paths: List[str], weight: int, disable_always: bool = False) -> \
+Union[ScheduleEntry, None]:
     start_date = utils.start_of_week_number(week_number=week_number)
     end_date = utils.end_of_week_number(week_number=week_number)
 
@@ -58,7 +74,8 @@ def schedule_entry_from_week_number(week_number: int, paths: List[str], weight: 
                          name_prefix=f"Week {week_number}")
 
 
-def schedule_entry_from_month_number(month_number: int, paths: List[str], weight: int, disable_always: bool = False) -> Union[ScheduleEntry, None]:
+def schedule_entry_from_month_number(month_number: int, paths: List[str], weight: int, disable_always: bool = False) -> \
+Union[ScheduleEntry, None]:
     start_date = utils.start_of_month(month_number=month_number)
     end_date = utils.end_of_month(month_number=month_number)
 
