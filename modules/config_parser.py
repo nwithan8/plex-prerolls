@@ -25,6 +25,68 @@ class YAMLElement:
                 return default
 
 
+class ConfigSection(YAMLElement):
+    def __init__(self, section_key: str, data, parent_key: str = None):
+        self.section_key = section_key
+        try:
+            data = data[self.section_key]
+        except confuse.NotFoundError:
+            pass
+        self._parent_key = parent_key
+        super().__init__(data=data)
+
+    @property
+    def full_key(self):
+        if self._parent_key is None:
+            return self.section_key
+        return f"{self._parent_key}_{self.section_key}".upper()
+
+    def _get_subsection(self, key: str, default=None):
+        try:
+            return ConfigSection(section_key=key, parent_key=self.full_key, data=self.data)
+        except confuse.NotFoundError:
+            return default
+
+
+class PathGlobbingPairConfig(YAMLElement):
+    def __init__(self, data):
+        super().__init__(data=data)
+
+    @property
+    def local_root_folder(self) -> str:
+        return self._get_value(key="root_path", default="/")
+
+    @property
+    def remote_root_folder(self) -> str:
+        return self._get_value(key="plex_path", default="/")
+
+    @property
+    def patterns(self) -> List[str]:
+        return self._get_value(key="patterns", default=[])
+
+    def __repr__(self):
+        return (f"PathGlobbingPairConfig(local_root_folder={self.local_root_folder}, "
+                f"remote_root_folder={self.remote_root_folder}, "
+                f"patterns={self.patterns})")
+
+
+class PathGlobbingConfig(YAMLElement):
+    def __init__(self, data):
+        super().__init__(data=data)
+
+    @property
+    def enabled(self) -> bool:
+        return self._get_value(key="enabled", default=False)
+
+    @property
+    def pairs(self) -> List[PathGlobbingPairConfig]:
+        data = self._get_value(key="pairs", default=[])
+        return [PathGlobbingPairConfig(data=d) for d in data]
+
+    def __repr__(self):
+        return f"PathGlobbingConfig(enabled={self.enabled}, pairs={self.pairs})"
+
+
 class Entry(YAMLElement):
     def __init__(self, data):
         super().__init__(data)
@@ -34,19 +96,19 @@ class Entry(YAMLElement):
         paths = []
         paths.extend(self.remote_paths)
 
-        if not advanced_settings or not advanced_settings.path_globbing.enabled:
+        if not self.path_globbing or not self.path_globbing.enabled:
             return paths
 
-        local_files_root = advanced_settings.path_globbing.local_root_folder
-        remote_files_root = advanced_settings.path_globbing.remote_root_folder
-
-        for glob in self.local_path_globs:
-            local_files = files.get_all_files_matching_glob_pattern(directory=local_files_root, pattern=glob)
-            for local_file in local_files:
-                remote_file = files.translate_local_path_to_remote_path(local_path=local_file,
-                                                                        local_root_folder=local_files_root,
-                                                                        remote_root_folder=remote_files_root)
-                paths.append(remote_file)
+        for pair in self.path_globbing.pairs:
+            local_files_root = pair.local_root_folder
+            remote_files_root = pair.remote_root_folder
+            for pattern in pair.patterns:
+                local_files = files.get_all_files_matching_glob_pattern(directory=local_files_root, pattern=pattern)
+                for local_file in local_files:
+                    remote_file = files.translate_local_path_to_remote_path(local_path=local_file,
+                                                                            local_root_folder=local_files_root,
+                                                                            remote_root_folder=remote_files_root)
+                    paths.append(remote_file)
 
         return paths
 
@@ -55,8 +117,8 @@ class Entry(YAMLElement):
         return self._get_value(key="paths", default=[])
 
     @property
-    def local_path_globs(self) -> List[str]:
-        return self._get_value(key="path_globs", default=[])
+    def path_globbing(self) -> PathGlobbingConfig:
+        return PathGlobbingConfig(data=self.data)
 
     @property
     def weight(self) -> int:
@@ -94,7 +156,7 @@ class DateRangeEntry(Entry):
 
     def __repr__(self):
         return (f"DateRangeEntry(start_date={self.start_date}, end_date={self.end_date}, "
-                f"remote_paths={self.remote_paths}, local_path_globs={self.local_path_globs}, weight={self.weight})")
+                f"remote_paths={self.remote_paths}, path_globbing={self.path_globbing}, weight={self.weight})")
 
 
 class WeekEntry(NumericalEntry):
@@ -103,7 +165,7 @@ class WeekEntry(NumericalEntry):
 
     def __repr__(self):
         return (f"WeekEntry(number={self.number}, remote_paths={self.remote_paths}, "
-                f"local_path_globs={self.local_path_globs}, weight={self.weight})")
+                f"path_globbing={self.path_globbing}, weight={self.weight})")
 
 
 class MonthEntry(NumericalEntry):
@@ -112,30 +174,7 @@ class MonthEntry(NumericalEntry):
 
     def __repr__(self):
         return (f"MonthEntry(number={self.number}, remote_paths={self.remote_paths}, "
-                f"local_path_globs={self.local_path_globs}, weight={self.weight})")
-
-
-class ConfigSection(YAMLElement):
-    def __init__(self, section_key: str, data, parent_key: str = None):
-        self.section_key = section_key
-        try:
-            data = data[self.section_key]
-        except confuse.NotFoundError:
-            pass
-        self._parent_key = parent_key
-        super().__init__(data=data)
-
-    @property
-    def full_key(self):
-        if self._parent_key is None:
-            return self.section_key
-        return f"{self._parent_key}_{self.section_key}".upper()
-
-    def _get_subsection(self, key: str, default=None):
-        try:
-            return ConfigSection(section_key=key, parent_key=self.full_key, data=self.data)
-        except confuse.NotFoundError:
-            return default
+                f"path_globbing={self.path_globbing}, weight={self.weight})")
 
 
 class PlexServerConfig(ConfigSection):
@@ -161,23 +200,6 @@ class PlexServerConfig(ConfigSection):
                 port = 443
 
         return port
-
-
-class PathGlobbingConfig(ConfigSection):
-    def __init__(self, data):
-        super().__init__(section_key="path_globbing", data=data)
-
-    @property
-    def enabled(self) -> bool:
-        return self._get_value(key="enabled", default=False)
-
-    @property
-    def local_root_folder(self) -> str:
-        return self._get_value(key="root_path", default="/")
-
-    @property
-    def remote_root_folder(self) -> str:
-        return self._get_value(key="plex_path", default="/")
 
 
 class RecentlyAddedAutoGenerationConfig(ConfigSection):
@@ -207,7 +229,8 @@ class RecentlyAddedAutoGenerationConfig(ConfigSection):
     def all_paths(self, advanced_settings: 'AdvancedConfig' = None) -> List[str]:
         paths = []
 
-        local_files = files.get_all_files_matching_glob_pattern(directory=self.local_files_root, pattern=f"{AUTO_GENERATED_RECENTLY_ADDED_PREROLL_PREFIX}*")
+        local_files = files.get_all_files_matching_glob_pattern(directory=self.local_files_root,
+                                                                pattern=f"{AUTO_GENERATED_RECENTLY_ADDED_PREROLL_PREFIX}*")
         for local_file in local_files:
             remote_file = files.translate_local_path_to_remote_path(local_path=local_file,
                                                                     local_root_folder=self.local_files_root,
@@ -241,10 +264,6 @@ class AdvancedConfig(ConfigSection):
         super().__init__(section_key="advanced", data=data)
 
     @property
-    def path_globbing(self) -> PathGlobbingConfig:
-        return PathGlobbingConfig(data=self.data)
-
-    @property
     def auto_generation(self) -> AutoGenerationConfig:
         return AutoGenerationConfig(data=self.data)
 
@@ -262,24 +281,24 @@ class AlwaysSection(ScheduleSection):
     def __init__(self, data):
         super(ScheduleSection, self).__init__(section_key="always", data=data)
 
-    # Double inheritance doesn't work well with conflicting "data" properties, just re-implement these two functions.
+    # Double inheritance doesn't work well with conflicting "data" properties, just re-implement these functions
     def all_paths(self, advanced_settings: 'AdvancedConfig' = None) -> List[str]:
         paths = []
         paths.extend(self.remote_paths)
 
-        if not advanced_settings or not advanced_settings.path_globbing.enabled:
+        if not self.path_globbing or not self.path_globbing.enabled:
             return paths
 
-        local_files_root = advanced_settings.path_globbing.local_root_folder
-        remote_files_root = advanced_settings.path_globbing.remote_root_folder
-
-        for glob in self.local_path_globs:
-            local_files = files.get_all_files_matching_glob_pattern(directory=local_files_root, pattern=glob)
-            for local_file in local_files:
-                remote_file = files.translate_local_path_to_remote_path(local_path=local_file,
-                                                                        local_root_folder=local_files_root,
-                                                                        remote_root_folder=remote_files_root)
-                paths.append(remote_file)
+        for pair in self.path_globbing.pairs:
+            local_files_root = pair.local_root_folder
+            remote_files_root = pair.remote_root_folder
+            for pattern in pair.patterns:
+                local_files = files.get_all_files_matching_glob_pattern(directory=local_files_root, pattern=pattern)
+                for local_file in local_files:
+                    remote_file = files.translate_local_path_to_remote_path(local_path=local_file,
+                                                                            local_root_folder=local_files_root,
+                                                                            remote_root_folder=remote_files_root)
+                    paths.append(remote_file)
 
         return paths
 
@@ -288,8 +307,9 @@ class AlwaysSection(ScheduleSection):
         return self._get_value(key="paths", default=[])
 
     @property
-    def local_path_globs(self) -> List[str]:
-        return self._get_value(key="path_globs", default=[])
+    def path_globbing(self) -> PathGlobbingConfig:
+        data = self._get_value(key="path_globbing", default={})
+        return PathGlobbingConfig(data=data)
 
     @property
     def weight(self) -> int:
@@ -299,7 +319,7 @@ class AlwaysSection(ScheduleSection):
         return self._get_value(key="count", default=len(self.all_paths(advanced_settings=advanced_settings)))
 
     def __repr__(self):
-        return (f"AlwaysSection(remote_paths={self.remote_paths}, local_path_globs={self.local_path_globs}, "
+        return (f"AlwaysSection(remote_paths={self.remote_paths}, path_globbing={self.path_globbing}, "
                 f"weight={self.weight}")
 
 
@@ -376,18 +396,16 @@ class Config:
             "Plex - URL": self.plex.url,
             "Plex - Token": "Exists" if self.plex.token else "Not Set",
             "Always - Enabled": self.always.enabled,
-            "Always - Paths": self.always.all_paths(advanced_settings=self.advanced),
-            "Always - Count": self.always.random_count(advanced_settings=self.advanced),
-            "Always - Weight": self.always.weight,
+            "Always - Config": self.always,
             "Date Range - Enabled": self.date_ranges.enabled,
             "Date Range - Ranges": self.date_ranges.ranges,
             "Monthly - Enabled": self.monthly.enabled,
             "Monthly - Months": self.monthly.months,
             "Weekly - Enabled": self.weekly.enabled,
             "Weekly - Weeks": self.weekly.weeks,
-            "Advanced - Path Globbing - Enabled": self.advanced.path_globbing.enabled,
-            "Advanced - Path Globbing - Local Root Folder": self.advanced.path_globbing.local_root_folder,
-            "Advanced - Path Globbing - Remote Root Folder": self.advanced.path_globbing.remote_root_folder
+            "Advanced - Auto Generation - Remote Path Root": self.advanced.auto_generation.remote_path_root,
+            "Advanced - Auto Generation - Recently Added - Enabled": self.advanced.auto_generation.recently_added.enabled,
+            "Advanced - Auto Generation - Recently Added - Count": self.advanced.auto_generation.recently_added.count,
         }
 
     def log(self) -> str:
