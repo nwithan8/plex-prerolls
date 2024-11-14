@@ -12,8 +12,20 @@ always:
     - "remote/path/to/video1.mp4"
     - "remote/path/to/video2.mp4"
     - "remote/path/to/video3.mp4"
-  path_globs:
-    - "local/path/to/prerolls/*.mp4" # Optional, use globbing to match local paths
+  path_globbing:
+      enabled: false # If true, use globbing to match paths
+      pairs:
+        - root_path: /files # The root folder to use for globbing
+          plex_path: /path/to/prerolls/in/plex # The path to use for the Plex server
+          patterns:
+            - "local/path/to/prerolls/*.mp4" # The pattern to use for globbing
+            - "local/path/to/prerolls/*.mkv" # The pattern to use for globbing
+        - root_path: /other/files # The root folder to use for globbing
+          plex_path: /path/to/other/prerolls/in/plex # The path to use for the Plex server
+          patterns:
+            - "local/path/to/prerolls/*.mp4" # The pattern to use for globbing
+            - "local/path/to/prerolls/*.mkv" # The pattern to use for globbing
+
   count: 10 # Optional, randomly select X many videos from the list rather than all of them
   weight: 1 # Optional, how much to emphasize these pre-rolls over others (higher = more likely to play)
 
@@ -28,8 +40,19 @@ date_range:
         - "remote/path/to/video1.mp4"
         - "remote/path/to/video2.mp4"
         - "remote/path/to/video3.mp4"
-      path_globs:
-        - "local/path/to/prerolls/*.mp4" # Optional, use globbing to match local paths
+      path_globbing:
+            enabled: false # If true, use globbing to match paths
+            pairs:
+              - root_path: /files # The root folder to use for globbing
+                plex_path: /path/to/prerolls/in/plex # The path to use for the Plex server
+                patterns:
+                  - "local/path/to/prerolls/*.mp4" # The pattern to use for globbing
+                  - "local/path/to/prerolls/*.mkv" # The pattern to use for globbing
+              - root_path: /other/files # The root folder to use for globbing
+                plex_path: /path/to/other/prerolls/in/plex # The path to use for the Plex server
+                patterns:
+                  - "local/path/to/prerolls/*.mp4" # The pattern to use for globbing
+                  - "local/path/to/prerolls/*.mkv" # The pattern to use for globbing
       weight: 2 # Optional, add these paths to the list twice (make up greater percentage of prerolls - more likely to be selected)
       disable_always: true # Optional, if present and true, disable the always prerolls when this schedule is active
     - start_date: xxxx-07-04 # Every year on July 4th
@@ -61,8 +84,19 @@ weekly:
         - "remote/path/to/video1.mp4"
         - "remote/path/to/video2.mp4"
         - "remote/path/to/video3.mp4"
-      path_globs:
-        - "local/path/to/prerolls/*.mp4" # Optional, use globbing to match local paths
+      path_globbing:
+            enabled: false # If true, use globbing to match paths
+            pairs:
+              - root_path: /files # The root folder to use for globbing
+                plex_path: /path/to/prerolls/in/plex # The path to use for the Plex server
+                patterns:
+                  - "local/path/to/prerolls/*.mp4" # The pattern to use for globbing
+                  - "local/path/to/prerolls/*.mkv" # The pattern to use for globbing
+              - root_path: /other/files # The root folder to use for globbing
+                plex_path: /path/to/other/prerolls/in/plex # The path to use for the Plex server
+                patterns:
+                  - "local/path/to/prerolls/*.mp4" # The pattern to use for globbing
+                  - "local/path/to/prerolls/*.mkv" # The pattern to use for globbing
       weight: 1 # Optional, how much to emphasize these pre-rolls over others (higher = more likely to play)
     - number: 2 # Second week of the year
       paths:
@@ -86,15 +120,22 @@ monthly:
         - "remote/path/to/video1.mp4"
         - "remote/path/to/video2.mp4"
         - "remote/path/to/video3.mp4"
-      path_globs:
-        - "local/path/to/prerolls/*.mp4" # Optional, use globbing to match local paths
+      path_globbing:
+            enabled: false # If true, use globbing to match paths
+            pairs:
+              - root_path: /files # The root folder to use for globbing
+                plex_path: /path/to/prerolls/in/plex # The path to use for the Plex server
+                patterns:
+                  - "local/path/to/prerolls/*.mp4" # The pattern to use for globbing
+                  - "local/path/to/prerolls/*.mkv" # The pattern to use for globbing
+              - root_path: /other/files # The root folder to use for globbing
+                plex_path: /path/to/other/prerolls/in/plex # The path to use for the Plex server
+                patterns:
+                  - "local/path/to/prerolls/*.mp4" # The pattern to use for globbing
+                  - "local/path/to/prerolls/*.mkv" # The pattern to use for globbing
       disable_always: false # If true, disable the always prerolls when this schedule is active
 
 advanced:
-  path_globbing:
-    enabled: true # If true, use globbing to match paths
-    root_path: /files # The root folder to use for globbing
-    plex_path: /path/to/prerolls/in/plex # The path to use for the Plex server
   auto_generation:
     plex_path: /path/to/auto-generated/prerolls/in/plex # The path for the Plex Media Server to use to access auto-generated prerolls
     recently_added:

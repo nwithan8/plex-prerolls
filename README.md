@@ -126,6 +126,101 @@ date_range:
       disable_always: true # Disable the inclusion of the `always` section when this entry is active
 ```
 
+#### Path Globbing
+
+**NOTE**: This feature will only work if you are running the Docker container on the same machine as your Plex
+server.
+
+Instead of listing out each individual preroll file, you can use glob (wildcard) patterns to match multiple files in a
+specific directory.
+
+The application will search for all files on your local filesystem that match the pattern(s) and automatically translate
+them to Plex-compatible remote paths.
+
+##### Setup
+
+Enable the feature under the `path_globbing` section of each schedule.
+
+Each `pair` is a local (`root_path`) path and remote (`plex_path`) path that correspond to each other.
+The `patterns` list is a list of glob patterns that will be searched for in the `root_path` directory and translated to
+the `plex_path`-directory equivalent.
+
+You can provide multiple `pairs` to match multiple local-remote directory pairs and multiple subsequent glob patterns.
+
+```yaml
+  path_globbing:
+    enabled: true
+    pairs:
+      - root_path: /files # The root folder to use for globbing
+        plex_path: /path/to/prerolls/in/plex # The path to use for the Plex server
+        patterns:
+          - "local/path/to/prerolls/*.mp4" # The pattern to look for in the root_path
+          - "local/path/to/prerolls/*.mkv" # The pattern to look for in the root_path
+      - root_path: /other/files
+        plex_path: /path/to/other/prerolls/in/plex
+        patterns:
+          - "local/path/to/prerolls/*.mp4"
+          - "local/path/to/prerolls/*.mkv"
+```
+
+For example, if your prerolls on your file system are located at `/mnt/user/media/prerolls` and Plex sees them at
+`/media/prerolls`, you would set the `root_path` to `/mnt/user/media/prerolls` and the `plex_path` to `/media/prerolls`.
+
+If you are using the Docker container, you can mount the preroll directory to the container at any location you would
+prefer (recommended: `/files`) and set the `root_path` accordingly. Although you can define multiple roots, it is
+recommended to use a single all-encompassing root folder and rely on more-detailed glob patterns to match files in
+specific subdirectories.
+
+If you are using the Unraid version of this container, the "Files Path" path is mapped to `/files` by default; you
+should set `root_path` to `/files` and `plex_path` to the same directory as seen by Plex.
+
+#### Usage
+
+In any schedule section, you can use the `path_globbing` key to specify glob pattern rules to match files.
+
+```yaml
+always:
+  enabled: true
+  paths:
+    - /remote/path/1.mp4
+    - /remote/path/2.mp4
+    - /remote/path/3.mp4
+  path_globbing:
+    enabled: true
+    pairs:
+      - root_path: /files
+        plex_path: /path/to/prerolls/in/plex
+        patterns:
+          - "*.mp4"
+```
+
+The above example will match all `.mp4` files in the `root_path` directory and append them to the list of prerolls.
+
+If you have organized your prerolls into subdirectories, you can specify specific subdirectories to match, or use `**`
+to match all subdirectories.
+
+```yaml
+always:
+  enabled: true
+  paths:
+    - /remote/path/1.mp4
+    - /remote/path/2.mp4
+    - /remote/path/3.mp4
+  path_globbing:
+    enabled: true
+    pairs:
+      - root_path: /files
+        plex_path: /path/to/prerolls/in/plex
+        patterns:
+          - "subdir1/*.mp4"
+          - "subdir2/*.mp4"
+          - "subdir3/**/*.mp4"
+```
+
+You can use both `paths` and `path_globbing` in the same section, allowing you to mix and match specific files with glob
+patterns. Please note that `paths` entries must be fully-qualified **remote** paths (as seen by Plex), while `pattern`
+entries in `path_globbing` are relative to the **local** `root_path` directory.
+
 #### Date Range Section Scheduling
 
 `date_range` entries can accept both dates (`yyyy-mm-dd`) and datetimes (`yyyy-mm-dd hh:mm:ss`, 24-hour time).
@@ -168,77 +263,6 @@ You should [adjust your cron schedule](#scheduling-script) to run the script mor
 ---
 
 ## Advanced Configuration
-
-### Path Globbing
-
-**NOTE**: This feature will only work if you are running the Docker container on the same machine as your Plex
-server.
-
-Instead of listing out each individual preroll file, you can use glob (wildcard) patterns to match multiple files in a
-specific directory.
-The application will search for all files on your local filesystem that match the pattern(s) and automatically translate
-them to Plex-compatible remote paths.
-
-#### Setup
-
-Enable the feature under the advanced section of the config file, and specify the path to the root directory of your
-preroll files, as well as the path to the same directory as seen by Plex.
-
-```yaml
-advanced:
-  path_globbing:
-    enabled: true
-    root_path: /path/to/preroll/directory/in/relation/to/application
-    plex_path: /path/to/same/directory/as/seen/by/plex
-```
-
-For example, if your prerolls on your file system are located at `/mnt/user/media/prerolls` and Plex sees them
-at `/media/prerolls`, you would set the `root_path` to `/mnt/user/media/prerolls` and the `plex_path`
-to `/media/prerolls`.
-
-If you are using the Docker container, you can mount the preroll directory to the container at any location you would
-prefer (recommended: `/files`) and set the `root_path` accordingly.
-
-If you are using the Unraid version of this container, the "Files Path" path is mapped to `/files` by default; you
-should set `root_path` to `/files` and `plex_path` to the same directory as seen by Plex.
-
-#### Usage
-
-In any schedule section, you can use the `path_globs` key to specify a list of glob patterns to match files.
-
-```yaml
-always:
-  enabled: true
-  paths:
-    - /remote/path/1.mp4
-    - /remote/path/2.mp4
-    - /remote/path/3.mp4
-  path_globs:
-    - "*.mp4"
-```
-
-The above example will match all `.mp4` files in the `root_path` directory and append them to the list of prerolls.
-
-If you have organized your prerolls into subdirectories, you can specify specific subdirectories to match, or use `**`
-to match all subdirectories.
-
-```yaml
-always:
-  enabled: true
-  paths:
-    - /remote/path/1.mp4
-    - /remote/path/2.mp4
-    - /remote/path/3.mp4
-  path_globs:
-    - "subdir1/*.mp4"
-    - "subdir2/*.mp4"
-    - "subdir3/**/*.mp4"
-```
-
-You can use both `paths` and `path_globs` in the same section, allowing you to mix and match specific files with glob
-patterns.
-Please note that `paths` entries must be fully-qualified **remote** paths (as seen by Plex), while `path_globs` entries
-are relative to the **local** `root_path` directory.
 
 ### Auto-Generation
 
