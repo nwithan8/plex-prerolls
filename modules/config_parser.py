@@ -118,7 +118,8 @@ class Entry(YAMLElement):
 
     @property
     def path_globbing(self) -> PathGlobbingConfig:
-        return PathGlobbingConfig(data=self.data)
+        data = self._get_value(key="path_globbing", default={})
+        return PathGlobbingConfig(data=data)
 
     @property
     def weight(self) -> int:
