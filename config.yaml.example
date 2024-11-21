@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nwithan8/plex-prerolls/main/.schema/config.schema.json
+
 # All keys must be in lowercase
 # All paths will be case-sensitive based on your environment (Linux, Windows)
 
