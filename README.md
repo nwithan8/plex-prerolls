@@ -316,3 +316,9 @@ Emby has a [Cinema Intros plugin](https://emby.media/support/articles/Cinema-Int
 similar ["list of videos" option](https://emby.media/support/articles/Cinema-Intros.html#custom-intros). Currently,
 there is **no way** to update this setting via Emby's API, so there is no way to automate this process. I am in
 communication with the Emby development team to see if this feature can be added.
+
+
+## Credit
+
+- [BrianLindner](https://github.com/BrianLindner) for the [original pre-roll scheduling concept](https://github.com/BrianLindner/plex-schedule-prerolls)
+- [AndrewHolmes060](https://github.com/AndrewHolmes060) for the [original trailer auto-generation feature](https://github.com/AndrewHolmes060/Plex-Preroll-Builder)
