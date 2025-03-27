@@ -10,6 +10,8 @@ from consts import ASSETS_DIR, AUTO_GENERATED_RECENTLY_ADDED_PREROLL_PREFIX
 from modules import youtube_downloader as ytd, utils, ffmpeg_utils
 from modules.renderers.base import PrerollRenderer
 
+import os
+
 LENGTH_SECONDS = 33.5
 
 
@@ -102,7 +104,12 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
         if not self.movie_year:
             logging.warning("No movie year available, not going to attempt to build preroll")
             return None, None
-        if self.movie_year < 1980:
+        try:
+            trailer_cutoff_year = int(os.getenv('TRAILER_CUTOFF_YEAR', 1980))
+        except ValueError:
+            logging.warning("Invalid TRAILER_CUTOFF_YEAR; defaulting to 1980")
+            trailer_cutoff_year = 1980
+        if self.movie_year < trailer_cutoff_year:
             # Finding good trailers automatically for movies older than 1980 is difficult (year is arbitrary)
             logging.warning("Movie is too old, not going to attempt to build preroll")
             return None, None
