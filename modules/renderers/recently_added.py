@@ -11,8 +11,6 @@ from modules import youtube_downloader as ytd, utils, ffmpeg_utils
 from modules.renderers.base import PrerollRenderer
 from modules.config_parser import Config
 
-import os
-
 LENGTH_SECONDS = 33.5
 
 
