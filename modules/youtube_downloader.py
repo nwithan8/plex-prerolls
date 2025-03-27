@@ -2,6 +2,7 @@ from typing import Callable
 
 import youtubesearchpython
 import yt_dlp
+import os
 
 import modules.logs as logging
 
@@ -106,11 +107,13 @@ def download_youtube_video(url: str, output_dir: str, output_filename: str = Non
     :param output_filename: The output filename.
     :return: The path to the downloaded file.
     """
+    cookies_file = os.getenv('YT_DLP_COOKIES', '/config/cookies.txt')
     options = {
         "paths": {"home": output_dir},
         'logger': YouTubeDownloaderLogger(),
         # 'progress_hooks': [_download_progress_hook],
         "overwrites": True,
+	    'cookiefile': cookies_file,
     }
     if output_filename:
         options['outtmpl'] = f"{output_filename}.%(ext)s"
@@ -131,6 +134,7 @@ def download_youtube_audio(url: str, output_dir: str, output_filename: str = Non
     :param output_filename: The output filename.
     :return: The path to the downloaded file.
     """
+    cookies_file = os.getenv('YT_DLP_COOKIES', '/config/cookies.txt')
     options = {
         "paths": {"home": output_dir},
         'format': 'm4a/bestaudio/best',
@@ -141,6 +145,7 @@ def download_youtube_audio(url: str, output_dir: str, output_filename: str = Non
         'logger': YouTubeDownloaderLogger(),
         # 'progress_hooks': [_download_progress_hook],
         "overwrites": True,
+	    'cookiefile': cookies_file,
     }
     if output_filename:
         options['outtmpl'] = f"{output_filename}.%(ext)s"
