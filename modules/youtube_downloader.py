@@ -5,6 +5,7 @@ import yt_dlp
 import os
 
 import modules.logs as logging
+from modules.config_parser import Config
 
 
 class SelectorPresets:
@@ -98,7 +99,7 @@ def run_youtube_search(query: str, selector_function: Callable[[dict], str], res
     return selector_function(videos)
 
 
-def download_youtube_video(url: str, output_dir: str, output_filename: str = None) -> str:
+def download_youtube_video(config: Config, url: str, output_dir: str, output_filename: str = None) -> str:
     """
     Download a YouTube video as a video file.
 
@@ -107,7 +108,8 @@ def download_youtube_video(url: str, output_dir: str, output_filename: str = Non
     :param output_filename: The output filename.
     :return: The path to the downloaded file.
     """
-    cookies_file = os.getenv('YT_DLP_COOKIES', '/config/cookies.txt')
+    cookies_file = config.advanced.auto_generation.cookies_file
+    logging.debug(f'Using yt-dlp cookies file: {cookies_file}')
     options = {
         "paths": {"home": output_dir},
         'logger': YouTubeDownloaderLogger(),

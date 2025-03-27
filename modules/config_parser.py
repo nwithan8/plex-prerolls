@@ -258,7 +258,11 @@ class AutoGenerationConfig(ConfigSection):
     def local_path_root(self) -> str:
         # The local (internal) path where auto-generated prerolls will be stored
         return AUTO_GENERATED_PREROLLS_DIR
-
+    
+    @property
+    def cookies_file(self) -> str:
+        return self._get_value(key="cookies_file", default="/config/cookies.txt")
+    
     @property
     def recently_added(self) -> RecentlyAddedAutoGenerationConfig:
         return RecentlyAddedAutoGenerationConfig(data=self.data, parent=self)
