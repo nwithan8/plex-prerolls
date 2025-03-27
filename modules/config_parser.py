@@ -239,7 +239,14 @@ class RecentlyAddedAutoGenerationConfig(ConfigSection):
             paths.append(remote_file)
 
         return paths
-
+    
+    @property
+    def trailer_cutoff_year(self) -> int:
+        try:
+            return int(self._get_value(key="trailer_cutoff_year", default=1980))
+        except (ValueError, TypeError):
+            logging.warning("Invalid 'trailer_cutoff_year' in config. Falling back to 1980.")
+            return 1980
 
 class AutoGenerationConfig(ConfigSection):
     def __init__(self, data):

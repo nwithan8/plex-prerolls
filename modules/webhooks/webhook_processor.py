@@ -72,7 +72,7 @@ class WebhookProcessor:
 
         renderer = RecentlyAddedPrerollRenderer(render_folder=output_dir,
                                                 movie=plex_movie)
-        asset_folder, local_file_path = renderer.render()
+        asset_folder, local_file_path = renderer.render(config)
 
         if not local_file_path:  # error has already been logged
             return

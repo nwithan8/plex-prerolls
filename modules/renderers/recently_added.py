@@ -9,6 +9,7 @@ import modules.logs as logging
 from consts import ASSETS_DIR, AUTO_GENERATED_RECENTLY_ADDED_PREROLL_PREFIX
 from modules import youtube_downloader as ytd, utils, ffmpeg_utils
 from modules.renderers.base import PrerollRenderer
+from modules.config_parser import Config
 
 import os
 
@@ -97,18 +98,14 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
         logging.info("Poster retrieved successfully")
         return file_path
 
-    def render(self) -> Tuple[Union[str, None], Union[str, None]]:
+    def render(self, config: Config) -> Tuple[Union[str, None], Union[str, None]]:
         if not self.movie_title:
             logging.warning("No movie title available, cannot build preroll")
             return None, None
         if not self.movie_year:
             logging.warning("No movie year available, not going to attempt to build preroll")
             return None, None
-        try:
-            trailer_cutoff_year = int(os.getenv('TRAILER_CUTOFF_YEAR', 1980))
-        except ValueError:
-            logging.warning("Invalid TRAILER_CUTOFF_YEAR; defaulting to 1980")
-            trailer_cutoff_year = 1980
+        trailer_cutoff_year = config.advanced.auto_generation.recently_added.trailer_cutoff_year
         if self.movie_year < trailer_cutoff_year:
             # Finding good trailers automatically for movies older than 1980 is difficult (year is arbitrary)
             logging.warning("Movie is too old, not going to attempt to build preroll")
