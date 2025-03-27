@@ -15,6 +15,7 @@ from modules.plex_connector import PlexConnector
 from modules.renderers import RecentlyAddedPrerollRenderer
 from modules.webhooks.plex import PlexWebhook, PlexWebhookEventType, PlexWebhookMetadataType
 
+import os
 
 class WebhookProcessor:
     def __init__(self):
@@ -69,7 +70,18 @@ class WebhookProcessor:
         if not plex_movie:
             logging.warning(f'Could not find movie in Plex: "{webhook.metadata.title}"')  # Not an error, just a warning
             return
-
+        
+        # Get list of excluded libraries from environment variable
+        excluded_libraries = os.getenv('EXCLUDED_LIBRARIES', '')
+        excluded_libraries = [lib.strip().lower() for lib in excluded_libraries.split(',') if lib.strip()]
+        
+        # Check if the current library is in the exclusion list
+        library_name = getattr(plex_movie, "librarySectionTitle", "").lower()
+        logging.debug(f'plex_movie librarySectionTitle: "{library_name}"')
+        if library_name in excluded_libraries:
+            logging.info(f'Skipping preroll render for "{webhook.metadata.title}" from excluded library: "{library_name}"')
+            return
+        
         renderer = RecentlyAddedPrerollRenderer(render_folder=output_dir,
                                                 movie=plex_movie)
         asset_folder, local_file_path = renderer.render()
