@@ -64,22 +64,22 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
             selector_function=ytd.SelectorPresets.select_first_video,
             results_limit=5)
         video_url = ytd.get_video_url(video_id=video_id)
-        video_file_path = ytd.download_youtube_video(config,
-                                                     url=video_url,
+        video_file_path = ytd.download_youtube_video(url=video_url,
+                                                     config=config,
                                                      output_dir=self.download_folder,
                                                      output_filename=self._video_file_name)
         logging.info("Trailer retrieved successfully")
         return video_file_path
 
-    def _get_background_music(self) -> str:
+    def _get_background_music(self, config: Config) -> str:
         search_query = f"{self.youtube_search_query_movie_title} movie soundtrack"
         logging.info(f'Retrieving background music for "{self.movie_title}", YouTube search query: "{search_query}"')
         video_id = ytd.run_youtube_search(query=f"{self.youtube_search_query_movie_title} movie soundtrack",
                                           selector_function=ytd.SelectorPresets.select_first_video,
                                           results_limit=5)
         video_url = ytd.get_video_url(video_id=video_id)
-        video_file_path = ytd.download_youtube_video(config,
-                                                     url=video_url,
+        video_file_path = ytd.download_youtube_video(url=video_url,
+                                                     config=config,
                                                      output_dir=self.download_folder,
                                                      output_filename=self._audio_file_name)
         logging.info("Background music retrieved successfully")
@@ -113,8 +113,8 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
 
         self.download_folder = utils.get_temporary_directory_path(parent_directory=self.download_folder)
         logging.info(f'Retrieving assets for preroll of "{self.movie_title}", saving to {self.download_folder}')
-        video_path = self._get_trailer(config)
-        audio_path = self._get_background_music(config)
+        video_path = self._get_trailer(config=config)
+        audio_path = self._get_background_music(config=config)
         audio_path = _trim_background_music(background_music_file_path=audio_path)
         poster_path = self._get_movie_poster()
 

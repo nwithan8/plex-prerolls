@@ -99,26 +99,27 @@ def run_youtube_search(query: str, selector_function: Callable[[dict], str], res
     return selector_function(videos)
 
 
-def download_youtube_video(config: Config, url: str, output_dir: str, output_filename: str = None) -> str:
+def download_youtube_video(url: str, config: Config, output_dir: str, output_filename: str = None) -> str:
     """
     Download a YouTube video as a video file.
 
     :param url: The YouTube video URL.
+    :param config: The configuration for Plex Prerolls.
     :param output_dir: The output directory.
     :param output_filename: The output filename.
     :return: The path to the downloaded file.
     """
     cookies_file = config.advanced.auto_generation.cookies_file
-    logging.debug(f'Using yt-dlp cookies file: {cookies_file}')
     options = {
         "paths": {"home": output_dir},
         'logger': YouTubeDownloaderLogger(),
         # 'progress_hooks': [_download_progress_hook],
         "overwrites": True,
-	    'cookiefile': cookies_file,
     }
     if output_filename:
         options['outtmpl'] = f"{output_filename}.%(ext)s"
+    if cookies_file:
+        options['cookiefile'] = cookies_file
 
     with yt_dlp.YoutubeDL(params=options) as ydl:
         # download the file and extract info
@@ -127,16 +128,17 @@ def download_youtube_video(config: Config, url: str, output_dir: str, output_fil
         return ydl.prepare_filename(info)
 
 
-def download_youtube_audio(url: str, output_dir: str, output_filename: str = None) -> str:
+def download_youtube_audio(url: str, config: Config, output_dir: str, output_filename: str = None) -> str:
     """
     Download a YouTube video as an audio file.
 
     :param url: The YouTube video URL.
+    :param config: The configuration for Plex Prerolls.
     :param output_dir: The output directory.
     :param output_filename: The output filename.
     :return: The path to the downloaded file.
     """
-    cookies_file = os.getenv('YT_DLP_COOKIES', '/config/cookies.txt')
+    cookies_file = config.advanced.auto_generation.cookies_file
     options = {
         "paths": {"home": output_dir},
         'format': 'm4a/bestaudio/best',
@@ -147,10 +149,11 @@ def download_youtube_audio(url: str, output_dir: str, output_filename: str = Non
         'logger': YouTubeDownloaderLogger(),
         # 'progress_hooks': [_download_progress_hook],
         "overwrites": True,
-	    'cookiefile': cookies_file,
     }
     if output_filename:
         options['outtmpl'] = f"{output_filename}.%(ext)s"
+    if cookies_file:
+        options['cookiefile'] = cookies_file
 
     with yt_dlp.YoutubeDL(params=options) as ydl:
         # download the file and extract info

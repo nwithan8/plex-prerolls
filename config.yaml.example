@@ -140,7 +140,6 @@ monthly:
 advanced:
   auto_generation:
     plex_path: /path/to/auto-generated/prerolls/in/plex # The path for the Plex Media Server to use to access auto-generated prerolls
-    cookies_file: /config/cookies.txt
     recently_added:
       # If enabled, auto-generate prerolls for recently added items and add them as an always-on choice (files will be uploaded to the "Preroll Auto-Generated/Recently Added" folder)
       enabled: true # If enabled, auto-generate prerolls for recently added items and add them to the "always" list
