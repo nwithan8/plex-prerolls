@@ -2,6 +2,7 @@ import json
 import threading
 from typing import Union
 
+import pydantic_core
 from flask import (
     jsonify,
     request as flask_request,
@@ -45,7 +46,13 @@ class WebhookProcessor:
         Process a recently added webhook from Tautulli.
         """
         json_data = WebhookProcessor._extract_body(request=request)
-        webhook = PlexWebhook(**json_data)
+
+        try:
+            webhook = PlexWebhook(**json_data)
+        except pydantic_core._pydantic_core.ValidationError as e:
+            # If we receive a validation error (incoming webhook does not have the payload we expect), simply ignore it
+            # This can happen, e.g. when we receive a playback start webhook for a cinema trailer, which does not have a librarySectionID
+            return jsonify({}), 200
 
         match webhook.event_type:
             case PlexWebhookEventType.MEDIA_ADDED:

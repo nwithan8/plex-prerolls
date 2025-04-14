@@ -48,7 +48,7 @@ class Metadata(BaseModel):
     parentRatingKey: Optional[str] = None
     grandparentRatingKey: Optional[str] = None
     guid: Optional[str] = None
-    librarySectionID: int
+    librarySectionID: Optional[int] = None
     type: Optional[str] = None
     title: Optional[str] = None
     year: Optional[int] = None
