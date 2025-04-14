@@ -239,14 +239,11 @@ class RecentlyAddedAutoGenerationConfig(ConfigSection):
             paths.append(remote_file)
 
         return paths
-    
+
     @property
     def trailer_cutoff_year(self) -> int:
-        try:
-            return int(self._get_value(key="trailer_cutoff_year", default=1980))
-        except (ValueError, TypeError):
-            logging.warning("Invalid 'trailer_cutoff_year' in config. Falling back to 1980.")
-            return 1980
+        return self._get_value(key="trailer_cutoff_year", default=1980)
+
 
 class AutoGenerationConfig(ConfigSection):
     def __init__(self, data):
@@ -414,6 +411,7 @@ class Config:
             "Advanced - Auto Generation - Remote Path Root": self.advanced.auto_generation.remote_path_root,
             "Advanced - Auto Generation - Recently Added - Enabled": self.advanced.auto_generation.recently_added.enabled,
             "Advanced - Auto Generation - Recently Added - Count": self.advanced.auto_generation.recently_added.count,
+            "Advanced - Auto Generation - Recently Added - Trailer Cutoff Year": self.advanced.auto_generation.recently_added.trailer_cutoff_year,
         }
 
     def log(self) -> str:
