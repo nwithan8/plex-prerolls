@@ -286,6 +286,8 @@ Example of a generated preroll:
 
 <img src="https://raw.githubusercontent.com/nwithan8/plex-prerolls/main/documentation/images/recently-added-preroll-example.png" alt="logo" width="300">
 
+> :warning: This feature requires [extracting cookies for YouTube](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp) and storing them in a file called `yt_dlp_cookies.txt` alongside your `config.yaml` file.
+
 ##### Setup
 
 [Set up a Plex webhook](https://support.plex.tv/articles/115002267687-webhooks/) to point to the application's

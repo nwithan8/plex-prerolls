@@ -2,8 +2,10 @@ from typing import Callable
 
 import youtubesearchpython
 import yt_dlp
+import os
 
 import modules.logs as logging
+from modules.config_parser import Config
 
 
 class SelectorPresets:
@@ -97,15 +99,17 @@ def run_youtube_search(query: str, selector_function: Callable[[dict], str], res
     return selector_function(videos)
 
 
-def download_youtube_video(url: str, output_dir: str, output_filename: str = None) -> str:
+def download_youtube_video(url: str, config: Config, output_dir: str, output_filename: str = None) -> str:
     """
     Download a YouTube video as a video file.
 
     :param url: The YouTube video URL.
+    :param config: The configuration for Plex Prerolls.
     :param output_dir: The output directory.
     :param output_filename: The output filename.
     :return: The path to the downloaded file.
     """
+    cookies_file = config.advanced.auto_generation.cookies_file
     options = {
         "paths": {"home": output_dir},
         'logger': YouTubeDownloaderLogger(),
@@ -114,6 +118,8 @@ def download_youtube_video(url: str, output_dir: str, output_filename: str = Non
     }
     if output_filename:
         options['outtmpl'] = f"{output_filename}.%(ext)s"
+    if cookies_file:
+        options['cookiefile'] = cookies_file
 
     with yt_dlp.YoutubeDL(params=options) as ydl:
         # download the file and extract info
@@ -122,15 +128,17 @@ def download_youtube_video(url: str, output_dir: str, output_filename: str = Non
         return ydl.prepare_filename(info)
 
 
-def download_youtube_audio(url: str, output_dir: str, output_filename: str = None) -> str:
+def download_youtube_audio(url: str, config: Config, output_dir: str, output_filename: str = None) -> str:
     """
     Download a YouTube video as an audio file.
 
     :param url: The YouTube video URL.
+    :param config: The configuration for Plex Prerolls.
     :param output_dir: The output directory.
     :param output_filename: The output filename.
     :return: The path to the downloaded file.
     """
+    cookies_file = config.advanced.auto_generation.cookies_file
     options = {
         "paths": {"home": output_dir},
         'format': 'm4a/bestaudio/best',
@@ -144,6 +152,8 @@ def download_youtube_audio(url: str, output_dir: str, output_filename: str = Non
     }
     if output_filename:
         options['outtmpl'] = f"{output_filename}.%(ext)s"
+    if cookies_file:
+        options['cookiefile'] = cookies_file
 
     with yt_dlp.YoutubeDL(params=options) as ydl:
         # download the file and extract info
