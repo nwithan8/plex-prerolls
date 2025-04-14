@@ -143,7 +143,8 @@ advanced:
     recently_added:
       # If enabled, auto-generate prerolls for recently added items and add them as an always-on choice (files will be uploaded to the "Preroll Auto-Generated/Recently Added" folder)
       enabled: true # If enabled, auto-generate prerolls for recently added items and add them to the "always" list
-      count: 2 # The number of most-recently added items to use for auto-generation
+      count: 2 # The number of most-recently added items to use for auto-generation 
+      trailer_cutoff_year: 1980 # Optional: Specify the earliest year for valid trailer searches (Defaults to 1980)
 
 
 

@@ -382,10 +382,23 @@
                   "title": "Recently added count",
                   "description": "The number of recently added media to include as prerolls",
                   "$ref": "#/definitions/positiveInteger"
+                },
+                "trailer_cutoff_year": {
+                  "title": "Trailer cutoff year",
+                  "description": "The year to use as a cutoff for trailers. Default is 1980",
+                  "$ref": "#/definitions/positiveInteger"
                 }
-              }
+              },
+              "required": [
+                "enabled",
+                "count"
+              ]
             }
-          }
+          },
+          "required": [
+            "plex_path",
+            "recently_added"
+          ]
         }
       }
     }
