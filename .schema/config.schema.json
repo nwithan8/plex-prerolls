@@ -11,6 +11,12 @@
       "type": "string",
       "format": "date-time"
     },
+    "cron": {
+      "id": "#/definitions/cron",
+      "type": "string",
+      "pattern": "^([0-5]?\\d) ([01]?\\d|2[0-3]) ([1-9]|[12]\\d|3[01]) ([1-9]|1[012]) ([0-6])$",
+      "description": "Cron expression in the format: `minute hour day month weekday`"
+    },
     "positiveInteger": {
       "id": "#/definitions/positiveInteger",
       "type": "integer",
@@ -148,6 +154,25 @@
     }
   },
   "properties": {
+    "run": {
+      "title": "Run configuration",
+      "description": "Settings for running the application",
+      "type": "object",
+      "properties": {
+        "schedule": {
+          "title": "Cron schedule",
+          "description": "The cron schedule for running the application",
+          "$ref": "#/definitions/cron",
+          "default": "0 0 * * *"
+        },
+        "dry_run": {
+          "title": "Dry run",
+          "description": "Whether to run in dry run mode (don't actually make changes to Plex)",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
     "plex": {
       "title": "Plex configuration",
       "description": "Settings for the Plex server",

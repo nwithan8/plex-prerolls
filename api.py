@@ -1,9 +1,4 @@
 import argparse
-import threading
-from datetime import datetime
-from time import sleep
-
-from croniter import croniter
 from flask import (
     Flask,
     request as flask_request,
@@ -23,8 +18,6 @@ from consts import (
 )
 from modules.config_parser import Config
 from modules.errors import determine_exit_code
-from modules.plex_connector import PlexConnector
-from modules.schedule_manager import ScheduleManager
 from modules.webhooks.webhook_processor import WebhookProcessor
 
 parser = argparse.ArgumentParser(description=f"{APP_NAME} - {APP_DESCRIPTION}")
@@ -35,7 +28,6 @@ parser.add_argument("-l", "--log", help=f"Log file directory. Defaults to '{DEFA
                     default=DEFAULT_LOG_DIR)  # Should include trailing backslash
 parser.add_argument("-r", "--renders", help=f"Path to renders directory. Defaults to '{DEFAULT_RENDERS_DIR}'",
                     default=DEFAULT_RENDERS_DIR)
-
 args = parser.parse_args()
 
 # Set up logging
@@ -60,35 +52,22 @@ def run_with_potential_exit_on_error(func):
 
     return wrapper
 
-
 @run_with_potential_exit_on_error
-def pre_roll_update(config: Config):
-    cron_pattern = config.run.schedule
-    while True:
-        now = datetime.now()
-        if not croniter.match(cron_pattern, now):
-            # Cron only goes to minutes, not seconds, so we don't need to recheck as often
-            sleep(30)  # Sleep/check every 30 seconds
-            continue
+def start_webhooks_server(config: Config) -> None:
+    api = Flask(APP_NAME)
 
-        logging.info(f"Current time {now} matches cron pattern '{cron_pattern}'")
-        logging.info(f"Running pre-roll update...")
+    @api.route('/ping', methods=['GET'])
+    def ping():
+        return WebhookProcessor.process_ping(request=flask_request, config=config)
 
-        schedule_manager = ScheduleManager(config=config)
+    @api.route('/recently-added', methods=['POST'])
+    def recently_added():
+        if not config.advanced.auto_generation.recently_added.enabled:
+            return 'Recently added preroll generation is disabled', 200
+        return WebhookProcessor.process_recently_added(request=flask_request, config=config, output_dir=args.renders)
 
-        logging.info(f"Found {schedule_manager.valid_schedule_count} valid schedules")
-        logging.info(schedule_manager.valid_schedule_count_log_message)
-
-        all_valid_paths = schedule_manager.all_valid_paths
-
-        plex_connector = PlexConnector(host=config.plex.url, token=config.plex.token)
-        plex_connector.update_pre_roll_paths(paths=all_valid_paths, testing=config.run.dry_run)
-
-        sleep(60)  # Sleep at least a minute to avoid running multiple times in the same minute
+    api.run(host=FLASK_ADDRESS, port=FLASK_PORT, debug=True, use_reloader=False)
 
 
-if __name__ == '__main__':
-    # logging.info(splash_logo())
-    logging.info(f"Starting {APP_NAME}...")
-
-    pre_roll_update(config=_config)
+if __name__ == "__main__":
+    start_webhooks_server(config=_config)
