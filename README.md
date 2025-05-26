@@ -36,8 +36,6 @@ docker run -d \
   -e PUID=1000 \
   -e PGID=1000 \
   -e TZ=Etc/UTC \
-  -e CRON_SCHEDULE="0 0 * * *" \
-  -e DRY_RUN=false \
   -v /path/to/config:/ \
   -v /path/to/logs:/logs \
   -v /path/to/preroll/files:/files \
@@ -62,8 +60,6 @@ docker run -d \
 | `PUID`               | UID of user to run as                                             |
 | `PGID`               | GID of user to run as                                             |
 | `TZ`                 | Timezone to use for cron schedule                                 |
-| `CRON_SCHEDULE`      | Cron schedule to run script (see <https://crontab.guru> for help) |
-| `DRY_RUN`            | Don't actually make changes to Plex prerolls, only simulate       |
 
 ---
 

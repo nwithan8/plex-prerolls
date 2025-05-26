@@ -3,6 +3,10 @@
 # All keys must be in lowercase
 # All paths will be case-sensitive based on your environment (Linux, Windows)
 
+run:
+  schedule: 0 0 * * *
+  dry_run: false
+
 plex:
   url: http://localhost:32400 # URL to your Plex server
   token: thisismyplextoken # Your Plex token

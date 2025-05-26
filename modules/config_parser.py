@@ -179,6 +179,19 @@ class MonthEntry(NumericalEntry):
                 f"path_globbing={self.path_globbing}, weight={self.weight})")
 
 
+class RunConfig(ConfigSection):
+    def __init__(self, data):
+        super().__init__(section_key="run", data=data)
+
+    @property
+    def schedule(self) -> str:
+        return self._get_value(key="schedule", default="0 0 * * *")
+
+    @property
+    def dry_run(self) -> bool:
+        return self._get_value(key="dry_run", default=False)
+
+
 class PlexServerConfig(ConfigSection):
     def __init__(self, data):
         super().__init__(section_key="plex", data=data)
@@ -387,6 +400,7 @@ class Config:
         except Exception:  # pylint: disable=broad-except # not sure what confuse will throw
             raise FileNotFoundError(f"Config file not found: {config_path}")
 
+        self.run = RunConfig(data=self.config)
         self.plex = PlexServerConfig(data=self.config)
         self.always = AlwaysSection(data=self.config)
         self.date_ranges = DateRangeSection(data=self.config)
@@ -404,6 +418,8 @@ class Config:
     @property
     def all(self) -> dict:
         return {
+            "Run - Schedule": self.run.schedule,
+            "Run - Dry Run": self.run.dry_run,
             "Plex - URL": self.plex.url,
             "Plex - Token": "Exists" if self.plex.token else "Not Set",
             "Always - Enabled": self.always.enabled,
