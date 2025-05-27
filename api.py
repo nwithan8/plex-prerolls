@@ -66,6 +66,10 @@ def start_webhooks_server(config: Config) -> None:
             return 'Recently added preroll generation is disabled', 200
         return WebhookProcessor.process_recently_added(request=flask_request, config=config, output_dir=args.renders)
 
+    @api.route('/last-run-within', methods=['GET'])
+    def last_run_within():
+        return WebhookProcessor.process_last_run_within(request=flask_request, logs_folder=args.log)
+
     api.run(host=FLASK_ADDRESS, port=FLASK_PORT, debug=True, use_reloader=False)
 
 

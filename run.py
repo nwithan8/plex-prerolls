@@ -20,6 +20,7 @@ from consts import (
     FILE_LOG_LEVEL,
     FLASK_ADDRESS,
     FLASK_PORT,
+    LAST_RUN_CHECK_FILE,
 )
 from modules.config_parser import Config
 from modules.errors import determine_exit_code
@@ -60,7 +61,6 @@ def run_with_potential_exit_on_error(func):
 
     return wrapper
 
-
 @run_with_potential_exit_on_error
 def pre_roll_update(config: Config):
     cron_pattern = config.run.schedule
@@ -83,6 +83,8 @@ def pre_roll_update(config: Config):
 
         plex_connector = PlexConnector(host=config.plex.url, token=config.plex.token)
         plex_connector.update_pre_roll_paths(paths=all_valid_paths, testing=config.run.dry_run)
+
+        logging.write_to_last_run_file(logs_folder=args.log, last_run_file=LAST_RUN_CHECK_FILE)
 
         sleep(60)  # Sleep at least a minute to avoid running multiple times in the same minute
 
