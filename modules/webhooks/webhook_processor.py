@@ -1,3 +1,4 @@
+import datetime
 import json
 import threading
 from typing import Union
@@ -10,11 +11,13 @@ from flask import (
 from plexapi.video import Movie
 
 import modules.logs as logging
+from consts import LAST_RUN_CHECK_FILE
 from modules import utils
 from modules.config_parser import Config
 from modules.plex_connector import PlexConnector
 from modules.renderers import RecentlyAddedPrerollRenderer
 from modules.webhooks.plex import PlexWebhook, PlexWebhookEventType, PlexWebhookMetadataType
+from modules.webhooks.last_run import LastRunWithinTimeframeCheck
 
 
 class WebhookProcessor:
@@ -39,6 +42,42 @@ class WebhookProcessor:
         Return a 'Pong!' response and a 200 status code.
         """
         return 'Pong!', 200
+
+    @staticmethod
+    def process_last_run_within(request: flask_request, logs_folder: str) -> [Union[str, None],
+                                                                                                     int]:
+        """
+        Process a request to check if the last successful run was within a specified timeframe.
+        :param request: Flask request object.
+        :param logs_folder: Path to the logs folder (where the last run information is stored).
+        :return: 200 if the last run was within the timeframe, 400 otherwise. 500 if there was an error processing the request.
+        """
+        try:
+            last_run_check = LastRunWithinTimeframeCheck.from_flask_request(request=request)
+            return jsonify({}), 200 if WebhookProcessor._process_last_run_within_check(logs_folder=logs_folder,
+                                                                          last_run_check=last_run_check) else 400
+        except ValueError as e:
+            logging.error(f"Error processing last run within request: {e}")
+            return jsonify({"error": str(e)}), 500
+
+    @staticmethod
+    def _process_last_run_within_check(logs_folder: str, last_run_check: LastRunWithinTimeframeCheck) -> bool:
+        """
+        Check if the last successful run was within the specified timeframe.
+        :param logs_folder: Path to the logs folder.
+        :param last_run_check: LastRunWithinTimeframeCheck instance containing the timeframe to check.
+        :return: True if the last run was within the timeframe, False otherwise.
+        """
+        try:
+            last_run_time: datetime.datetime = logging.read_last_run_file(logs_folder=logs_folder,
+                                                                          last_run_file=LAST_RUN_CHECK_FILE)
+            if not last_run_time:
+                logging.warning("Last run time is not available. Assuming it is not within the timeframe.")
+                return False
+            return last_run_check.is_within_timeframe(time=last_run_time)
+        except Exception as e:
+            logging.error(f"Error reading last run file: {e}")
+            return False
 
     @staticmethod
     def process_recently_added(request: flask_request, config: Config, output_dir: str) -> [Union[str, None], int]:

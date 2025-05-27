@@ -12,3 +12,8 @@ services:
       - "8283:8283"
     environment:
       TZ: America/New_York
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8283/last-run-within?timeframe=24h" ]  # Adjust the timeframe as needed
+      interval: 5m
+      timeout: 10s
+      retries: 3

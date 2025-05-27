@@ -2,6 +2,7 @@ APP_NAME = "Plex Prerolls"
 APP_DESCRIPTION = "A tool to manage prerolls for Plex"
 DEFAULT_CONFIG_PATH = "config.yaml"
 DEFAULT_LOG_DIR = "logs/"
+LAST_RUN_CHECK_FILE = "last_run.txt"  # Should be in the logs directory
 DEFAULT_RENDERS_DIR = "renders"
 ASSETS_DIR = "assets"
 AUTO_GENERATED_PREROLLS_DIR = "/auto_rolls"
