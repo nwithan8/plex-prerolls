@@ -75,11 +75,7 @@ def fatal(message: str, specific_logger: Optional[str] = None):
 
 
 def write_to_last_run_file(logs_folder: str, last_run_file: str):
-    if logs_folder.endswith('/'):
-        logs_folder = logs_folder[:-1]
-
-    last_run_check_file = f"{logs_folder}/{last_run_file}"
-
+    last_run_check_file = os.path.join(logs_folder, last_run_file)
     with open(last_run_check_file, 'w') as file:
         file.write(datetime.now().isoformat())
 
