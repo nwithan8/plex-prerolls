@@ -7,4 +7,4 @@ croniter==3.0.3
 ffmpeg-python==0.2.0
 youtube-search-python==1.6.6
 yt-dlp==2025.3.31
-pydantic==2.9.0
+pydantic>=2.10.0
