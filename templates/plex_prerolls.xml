@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<Container version="2">
+<Container version="2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://raw.githubusercontent.com/nwithan8/unraid_templates/main/template_schema.xsd template_schema.xsd">
     <Name>Plex Prerolls</Name>
     <Repository>nwithan8/plex_prerolls:latest</Repository>
     <Registry>https://hub.docker.com/r/nwithan8/plex_prerolls</Registry>
@@ -19,8 +19,6 @@
     <Maintainer>
         <WebPage>https://github.com/nwithan8</WebPage>
     </Maintainer>
-    <Config Name="Cron Schedule" Target="CRON_SCHEDULE" Default="0 0 * * *" Description="How often to update schedules. See https://crontab.guru for help." Type="Variable" Display="always" Required="true" Mask="false">0 0 * * *</Config>
-    <Config Name="Dry Run" Target="DRY_RUN" Default="false|true" Description="Enable dry-run (testing) mode. No changes will be made to Plex." Type="Variable" Display="always" Required="false" Mask="false" />
     <Config Name="Webhooks Port" Target="8283" Default="8283" Description="Port to listen for webhooks" Type="Port" Display="always" Required="false" Mask="false">8283</Config>
     <Config Name="Files Path" Target="/files" Default="/mnt/user/appdata/plex_prerolls/files" Mode="ro" Description="(Optional) Where preroll files are stored, for local path glob feature" Type="Path" Display="always" Required="false" Mask="false">/mnt/user/appdata/plex_prerolls/files</Config>
     <Config Name="Auto-Generated Prerolls Path" Target="/auto_rolls" Default="" Mode="rw" Description="(Optional) Where auto-generated prerolls will be stored" Type="Path" Display="always" Required="false" Mask="false" />

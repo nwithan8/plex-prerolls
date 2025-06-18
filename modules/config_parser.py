@@ -1,4 +1,5 @@
 import json
+import os
 from typing import List, Union
 
 import confuse
@@ -178,6 +179,19 @@ class MonthEntry(NumericalEntry):
                 f"path_globbing={self.path_globbing}, weight={self.weight})")
 
 
+class RunConfig(ConfigSection):
+    def __init__(self, data):
+        super().__init__(section_key="run", data=data)
+
+    @property
+    def schedule(self) -> str:
+        return self._get_value(key="schedule", default="0 0 * * *")
+
+    @property
+    def dry_run(self) -> bool:
+        return self._get_value(key="dry_run", default=False)
+
+
 class PlexServerConfig(ConfigSection):
     def __init__(self, data):
         super().__init__(section_key="plex", data=data)
@@ -251,6 +265,10 @@ class RecentlyAddedAutoGenerationConfig(ConfigSection):
         else:
             return []
 
+    @property
+    def trailer_cutoff_year(self) -> int:
+        return self._get_value(key="trailer_cutoff_year", default=1980)
+
 
 class AutoGenerationConfig(ConfigSection):
     def __init__(self, data):
@@ -265,6 +283,11 @@ class AutoGenerationConfig(ConfigSection):
     def local_path_root(self) -> str:
         # The local (internal) path where auto-generated prerolls will be stored
         return AUTO_GENERATED_PREROLLS_DIR
+
+    @property
+    def cookies_file(self) -> str:
+        cookies_file_path = "/config/yt_dlp_cookies.txt"
+        return cookies_file_path if os.path.exists(cookies_file_path) else ""
 
     @property
     def recently_added(self) -> RecentlyAddedAutoGenerationConfig:
@@ -388,6 +411,7 @@ class Config:
         except Exception:  # pylint: disable=broad-except # not sure what confuse will throw
             raise FileNotFoundError(f"Config file not found: {config_path}")
 
+        self.run = RunConfig(data=self.config)
         self.plex = PlexServerConfig(data=self.config)
         self.always = AlwaysSection(data=self.config)
         self.date_ranges = DateRangeSection(data=self.config)
@@ -405,6 +429,8 @@ class Config:
     @property
     def all(self) -> dict:
         return {
+            "Run - Schedule": self.run.schedule,
+            "Run - Dry Run": self.run.dry_run,
             "Plex - URL": self.plex.url,
             "Plex - Token": "Exists" if self.plex.token else "Not Set",
             "Always - Enabled": self.always.enabled,
@@ -418,6 +444,7 @@ class Config:
             "Advanced - Auto Generation - Remote Path Root": self.advanced.auto_generation.remote_path_root,
             "Advanced - Auto Generation - Recently Added - Enabled": self.advanced.auto_generation.recently_added.enabled,
             "Advanced - Auto Generation - Recently Added - Count": self.advanced.auto_generation.recently_added.count,
+            "Advanced - Auto Generation - Recently Added - Trailer Cutoff Year": self.advanced.auto_generation.recently_added.trailer_cutoff_year,
         }
 
     def log(self) -> str:

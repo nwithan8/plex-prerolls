@@ -3,6 +3,10 @@
 # All keys must be in lowercase
 # All paths will be case-sensitive based on your environment (Linux, Windows)
 
+run:
+  schedule: 0 0 * * *
+  dry_run: false
+
 plex:
   url: http://localhost:32400 # URL to your Plex server
   token: thisismyplextoken # Your Plex token
@@ -145,6 +149,7 @@ advanced:
       enabled: true # If enabled, auto-generate prerolls for recently added items and add them to the "always" list
       count: 2 # The number of most-recently added items to use for auto-generation
       excluded_libraries: [] # Optional: Exclude specific Plex libraries, e.g. [Documentaries, Anime] or "Documentaries, Anime"
+      trailer_cutoff_year: 1980 # Optional: Specify the earliest year for valid trailer searches (Defaults to 1980)
 
 
 

@@ -5,14 +5,17 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - /path/to/config:/config
-      - /path/to/logs:/logs
-      - /path/to/prerolls:/files
-      - /path/to/auto-generated/rolls/temp:/renders
-      - /path/to/auto-generated/rolls/parent:/auto_rolls
+      - ./on_host/config:/config
+      - ./on_host/logs:/logs
+      - ./on_host/prerolls:/files
+      - ./on_host/renders:/renders
+      - ./on_host/auto_rolls:/auto_rolls
     ports:
       - "8283:8283"
     environment:
-      CRON_SCHEDULE: "0 0 * * *" # Run every day at midnight, see https://crontab.guru/ for help
-      DRY_RUN: "false" # Set to true to test without actually downloading
       TZ: America/New_York
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8283/last-run-within?timeframe=24h"]  # Adjust the timeframe as needed
+      interval: 5m
+      timeout: 10s
+      retries: 3

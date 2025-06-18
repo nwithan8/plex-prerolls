@@ -9,6 +9,7 @@ import modules.logs as logging
 from consts import ASSETS_DIR, AUTO_GENERATED_RECENTLY_ADDED_PREROLL_PREFIX
 from modules import youtube_downloader as ytd, utils, ffmpeg_utils
 from modules.renderers.base import PrerollRenderer
+from modules.config_parser import Config
 
 LENGTH_SECONDS = 33.5
 
@@ -55,7 +56,7 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
     def youtube_search_query_movie_title(self) -> str:
         return f'"{self.movie_title}" {self.movie_year or ""}'.strip()
 
-    def _get_trailer(self) -> str:
+    def _get_trailer(self, config: Config) -> str:
         search_query = f"{self.youtube_search_query_movie_title} Official Movie Theatrical Trailer"
         logging.info(f'Retrieving trailer for "{self.movie_title}", YouTube search query: "{search_query}"')
         video_id = ytd.run_youtube_search(
@@ -64,12 +65,13 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
             results_limit=5)
         video_url = ytd.get_video_url(video_id=video_id)
         video_file_path = ytd.download_youtube_video(url=video_url,
+                                                     config=config,
                                                      output_dir=self.download_folder,
                                                      output_filename=self._video_file_name)
         logging.info("Trailer retrieved successfully")
         return video_file_path
 
-    def _get_background_music(self) -> str:
+    def _get_background_music(self, config: Config) -> str:
         search_query = f"{self.youtube_search_query_movie_title} movie soundtrack"
         logging.info(f'Retrieving background music for "{self.movie_title}", YouTube search query: "{search_query}"')
         video_id = ytd.run_youtube_search(query=f"{self.youtube_search_query_movie_title} movie soundtrack",
@@ -77,6 +79,7 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
                                           results_limit=5)
         video_url = ytd.get_video_url(video_id=video_id)
         video_file_path = ytd.download_youtube_video(url=video_url,
+                                                     config=config,
                                                      output_dir=self.download_folder,
                                                      output_filename=self._audio_file_name)
         logging.info("Background music retrieved successfully")
@@ -95,22 +98,23 @@ class RecentlyAddedPrerollRenderer(PrerollRenderer):
         logging.info("Poster retrieved successfully")
         return file_path
 
-    def render(self) -> Tuple[Union[str, None], Union[str, None]]:
+    def render(self, config: Config) -> Tuple[Union[str, None], Union[str, None]]:
         if not self.movie_title:
             logging.warning("No movie title available, cannot build preroll")
             return None, None
         if not self.movie_year:
             logging.warning("No movie year available, not going to attempt to build preroll")
             return None, None
-        if self.movie_year < 1980:
+        trailer_cutoff_year = config.advanced.auto_generation.recently_added.trailer_cutoff_year
+        if self.movie_year < trailer_cutoff_year:
             # Finding good trailers automatically for movies older than 1980 is difficult (year is arbitrary)
             logging.warning("Movie is too old, not going to attempt to build preroll")
             return None, None
 
         self.download_folder = utils.get_temporary_directory_path(parent_directory=self.download_folder)
         logging.info(f'Retrieving assets for preroll of "{self.movie_title}", saving to {self.download_folder}')
-        video_path = self._get_trailer()
-        audio_path = self._get_background_music()
+        video_path = self._get_trailer(config=config)
+        audio_path = self._get_background_music(config=config)
         audio_path = _trim_background_music(background_music_file_path=audio_path)
         poster_path = self._get_movie_poster()
 

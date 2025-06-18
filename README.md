@@ -36,8 +36,6 @@ docker run -d \
   -e PUID=1000 \
   -e PGID=1000 \
   -e TZ=Etc/UTC \
-  -e CRON_SCHEDULE="0 0 * * *" \
-  -e DRY_RUN=false \
   -v /path/to/config:/ \
   -v /path/to/logs:/logs \
   -v /path/to/preroll/files:/files \
@@ -62,8 +60,6 @@ docker run -d \
 | `PUID`               | UID of user to run as                                             |
 | `PGID`               | GID of user to run as                                             |
 | `TZ`                 | Timezone to use for cron schedule                                 |
-| `CRON_SCHEDULE`      | Cron schedule to run script (see <https://crontab.guru> for help) |
-| `DRY_RUN`            | Don't actually make changes to Plex prerolls, only simulate       |
 
 ---
 
@@ -285,6 +281,8 @@ as well as poster and metadata for the media item, and generating a preroll from
 Example of a generated preroll:
 
 <img src="https://raw.githubusercontent.com/nwithan8/plex-prerolls/main/documentation/images/recently-added-preroll-example.png" alt="logo" width="300">
+
+> :warning: This feature requires [extracting cookies for YouTube](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp) and storing them in a file called `yt_dlp_cookies.txt` alongside your `config.yaml` file.
 
 ##### Setup
 

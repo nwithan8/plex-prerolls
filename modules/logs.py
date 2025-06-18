@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 from typing import Optional
 
 _nameToLevel = {
@@ -52,8 +53,10 @@ def level_name_to_level(level_name: str):
 def info(message: str, specific_logger: Optional[str] = None):
     logging.getLogger(specific_logger if specific_logger else _DEFAULT_LOGGER_NAME).info(msg=message)
 
+
 def warning(message: str, specific_logger: Optional[str] = None):
     logging.getLogger(specific_logger if specific_logger else _DEFAULT_LOGGER_NAME).warning(msg=message)
+
 
 def debug(message: str, specific_logger: Optional[str] = None):
     logging.getLogger(specific_logger if specific_logger else _DEFAULT_LOGGER_NAME).debug(msg=message)
@@ -69,3 +72,36 @@ def critical(message: str, specific_logger: Optional[str] = None):
 
 def fatal(message: str, specific_logger: Optional[str] = None):
     logging.getLogger(specific_logger if specific_logger else _DEFAULT_LOGGER_NAME).critical(msg=message)
+
+
+def write_to_last_run_file(logs_folder: str, last_run_file: str):
+    if logs_folder.endswith('/'):
+        logs_folder = logs_folder[:-1]
+
+    last_run_check_file = f"{logs_folder}/{last_run_file}"
+
+    with open(last_run_check_file, 'w') as file:
+        file.write(datetime.now().isoformat())
+
+    info(f"Last run time written to {last_run_check_file}")
+
+
+def read_last_run_file(logs_folder: str, last_run_file: str) -> Optional[datetime]:
+    if logs_folder.endswith('/'):
+        logs_folder = logs_folder[:-1]
+
+    last_run_check_file = f"{logs_folder}/{last_run_file}"
+
+    try:
+        with open(last_run_check_file, 'r') as file:
+            last_run_data = file.read().strip()
+            if not last_run_data:
+                warning("Last run data is empty.")
+                return None
+            return datetime.fromisoformat(last_run_data)
+    except FileNotFoundError:
+        error(f"Last run file not found: {last_run_check_file}")
+        return None
+    except ValueError as e:
+        error(f"Error decoding last run data: {e}")
+        return None

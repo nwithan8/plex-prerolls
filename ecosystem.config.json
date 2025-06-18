@@ -1,0 +1,50 @@
+{
+  "apps": [
+    {
+      "name": "keepalive",
+      "interpreter": "/app/venv/bin/python",
+      "script": "pm2_keepalive.py",
+      "autorestart": true,
+      "exec_mode": "fork",
+      "instances": 1
+    },
+    {
+      "name": "api",
+      "interpreter": "/app/venv/bin/python",
+      "script": "api.py",
+      "args": [
+        "-c",
+        "/config/config.yaml",
+        "-l",
+        "/logs",
+        "-r",
+        "/renders"
+      ],
+      "autorestart": true,
+      "exec_mode": "fork",
+      "instances": 1,
+      "stop_exit_codes": [
+        302
+      ]
+    },
+    {
+      "name": "app",
+      "interpreter": "/app/venv/bin/python",
+      "script": "run.py",
+      "args": [
+        "-c",
+        "/config/config.yaml",
+        "-l",
+        "/logs",
+        "-r",
+        "/renders"
+      ],
+      "autorestart": true,
+      "exec_mode": "fork",
+      "instances": 1,
+      "stop_exit_codes": [
+        302
+      ]
+    }
+  ]
+}
