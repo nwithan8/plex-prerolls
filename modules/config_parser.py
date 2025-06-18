@@ -253,6 +253,17 @@ class RecentlyAddedAutoGenerationConfig(ConfigSection):
             paths.append(remote_file)
 
         return paths
+    
+    @property
+    def excluded_libraries(self) -> List[str]:
+        raw = self._get_value(key="excluded_libraries", default=[])
+        # Ensure it's a list even if someone types a comma-separated string
+        if isinstance(raw, str):
+            return [lib.strip().lower() for lib in raw.split(',') if lib.strip()]
+        elif isinstance(raw, list):
+            return [lib.strip().lower() for lib in raw]
+        else:
+            return []
 
     @property
     def trailer_cutoff_year(self) -> int:
