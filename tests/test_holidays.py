@@ -87,7 +87,7 @@ class TestHolidays(unittest.TestCase):
         weight = 10
         name = "Invalid Country Holiday Schedule"
 
-        with self.assertRaises(NotImplementedError) as ex:
+        with self.assertRaises(ValueError) as ex:
             schedule_entry_from_date_range(
                 start_date_string=None,
                 end_date_string=None,
@@ -96,4 +96,4 @@ class TestHolidays(unittest.TestCase):
                 weight=weight,
                 name=name
             )
-        self.assertIn("Country XX not available", str(ex.exception))
+        self.assertIn("Country with alpha-2 code 'XX' and subdivision 'None' not found.", str(ex.exception))

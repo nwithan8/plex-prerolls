@@ -14,7 +14,10 @@ def _get_country_from_alpha2(alpha2: str, year: int, subdivision: str = None) ->
     :return: The HolidayBase subclass for the specified country.
     :raises ValueError: If the country code is not found.
     """
-    country = holidays.country_holidays(country=alpha2, years=year, subdiv=subdivision)
+    try:
+        country = holidays.country_holidays(country=alpha2, years=year, subdiv=subdivision)
+    except NotImplementedError:
+        country = None
 
     if country is None:
         raise ValueError(f"Country with alpha-2 code '{alpha2}' and subdivision '{subdivision}' not found.")
