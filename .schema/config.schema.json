@@ -69,6 +69,12 @@
       "description": "Whether the feature is enabled",
       "type": "boolean"
     },
+    "countryCode": {
+      "title": "Country code",
+      "id": "#/definitions/countryCode",
+      "type": "string",
+      "pattern": "^[A-Z]{2}$"
+    },
     "startDate": {
       "title": "Start date",
       "description": "The start date of the range",
@@ -78,6 +84,45 @@
       "title": "End date",
       "description": "The end date of the range",
       "$ref": "#/definitions/date"
+    },
+    "holiday": {
+      "title": "Holiday",
+      "description": "Configuration for the floating holiday",
+      "id": "#/definitions/holiday",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "description": "Case-insensitive name of the holiday. Will be used to look up the date",
+          "type": "string"
+        },
+        "country": {
+          "title": "Country",
+          "description": "The country code (ISO 3166-1 alpha-2) to use for looking up the holiday date",
+          "$ref": "#/definitions/countryCode"
+        },
+        "subdivision": {
+          "title": "Subdivision",
+          "description": "Optional subdivision code to use for looking up the holiday date (e.g., state or province)",
+          "type": "string"
+        },
+        "offset_start": {
+          "title": "Offset start",
+          "description": "Number of days to offset the start date by (can be negative)",
+          "type": "integer",
+          "default": 0
+        },
+        "offset_end": {
+          "title": "Offset end",
+          "description": "Number of days to offset the end date by (can be negative)",
+          "type": "integer",
+          "default": 0
+        }
+      },
+      "required": [
+        "name",
+        "country"
+      ]
     },
     "disableAlways": {
       "title": "Disable always prerolls",
@@ -253,6 +298,9 @@
               "end_date": {
                 "$ref": "#/definitions/endDate"
               },
+              "holiday": {
+                "$ref": "#/definitions/emptyableString"
+              },
               "paths": {
                 "title": "Date range preroll paths",
                 "description": "Paths to media files to include as prerolls for this range",
@@ -270,10 +318,7 @@
                 "$ref": "#/definitions/disableAlways"
               }
             },
-            "required": [
-              "start_date",
-              "end_date"
-            ]
+            "required": []
           }
         }
       },

@@ -256,6 +256,30 @@ You should [adjust your cron schedule](#scheduling-script) to run the script mor
 
 `date_range` entries also accept an optional `name` value that can be used to identify the schedule in the logs.
 
+##### Floating Holidays
+
+You can specify floating holidays (holidays with variable dates each year, such as Thanksgiving and many religious holidays).
+
+```yaml
+date_range:
+  enabled: true
+  ranges:
+    # start_date and end_date are not required if using holiday
+    - start_date: IGNORED
+      end_date: IGNORED
+      holiday:
+        name: "Thanksgiving" # Name of the holiday to match (case-insensitive, partial matches allowed)
+        country: "US" # ALPHA-2 Country code to use for holiday matching (e.g. US)
+        subdivision: "" # Optional, subdivision code to use for holiday matching (e.g. CA for California)
+        offset_start: 0 # Optional, number of days to offset the start date (e.g. -1 for day before holiday)
+        offset_end: 0 # Optional, number of days to offset the end date (e.g. +1 for day after holiday)
+      paths:
+        - /path/to/video.mp4
+        - /path/to/another/video.mp4
+```
+
+Using the [`holidays` Python library](https://holidays.readthedocs.io/en/latest/), the date(s) of the holiday for the current year will be calculated automatically. This allows you to create recurring holiday schedules without needing to update the configuration file each year.
+
 ---
 
 ## Advanced Configuration

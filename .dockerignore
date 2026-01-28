@@ -12,3 +12,4 @@ venv
 __pycache__
 documentation
 templates
+tests

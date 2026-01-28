@@ -49,6 +49,36 @@ class ConfigSection(YAMLElement):
             return default
 
 
+class FloatingHolidayConfig(YAMLElement):
+    def __init__(self, data):
+        super().__init__(data=data)
+
+    @property
+    def name(self) -> str:
+        return self._get_value(key="name", default=None)
+
+    @property
+    def country(self) -> str:
+        return self._get_value(key="country", default=None)
+
+    @property
+    def subdivision(self) -> str:
+        return self._get_value(key="subdivision", default=None)
+
+    @property
+    def offset_start(self) -> int:
+        return self._get_value(key="offset_start", default=0)
+
+    @property
+    def offset_end(self) -> int:
+        return self._get_value(key="offset_end", default=0)
+
+    def __repr__(self):
+        return (f"FloatingHolidayConfig(name={self.name}, country={self.country}, "
+                f"subdivision={self.subdivision}, offset_start={self.offset_start}, "
+                f"offset_end={self.offset_end})")
+
+
 class PathGlobbingPairConfig(YAMLElement):
     def __init__(self, data):
         super().__init__(data=data)
@@ -156,8 +186,13 @@ class DateRangeEntry(Entry):
     def end_date(self) -> str:
         return self._get_value(key="end_date", default=None)
 
+    @property
+    def holiday(self) -> FloatingHolidayConfig:
+        data = self._get_value(key="holiday", default={})
+        return FloatingHolidayConfig(data=data)
+
     def __repr__(self):
-        return (f"DateRangeEntry(start_date={self.start_date}, end_date={self.end_date}, "
+        return (f"DateRangeEntry(start_date={self.start_date}, end_date={self.end_date}, holiday={self.holiday}, "
                 f"remote_paths={self.remote_paths}, path_globbing={self.path_globbing}, weight={self.weight})")
 
 
@@ -253,7 +288,7 @@ class RecentlyAddedAutoGenerationConfig(ConfigSection):
             paths.append(remote_file)
 
         return paths
-    
+
     @property
     def excluded_libraries(self) -> List[str]:
         raw = self._get_value(key="excluded_libraries", default=[])

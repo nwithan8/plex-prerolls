@@ -43,6 +43,7 @@ class ScheduleManager:
                 entry = models.schedule_entry_from_date_range(
                     start_date_string=date_range.start_date,
                     end_date_string=date_range.end_date,
+                    holiday=date_range.holiday,
                     paths=date_range.all_paths(
                         advanced_settings=self._config.advanced),
                     weight=date_range.weight,

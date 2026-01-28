@@ -80,6 +80,16 @@ date_range:
         - "remote/path/to/video1.mp4"
         - "remote/path/to/video2.mp4"
         - "remote/path/to/video3.mp4"
+    - holiday:
+        name: "Thanksgiving" # Name of the holiday to match (case-insensitive, e.g. "New Year's Day", "Christmas Day", "Independence Day")
+        country: "US" # Country code to use for holiday matching (e.g. US)
+        subdivision: "" # Optional, subdivision code to use for holiday matching (e.g. CA for California)
+        offset_start: 0 # Optional, number of days to offset the start date (e.g. -1 for day before holiday)
+        offset_end: 0 # Optional, number of days to offset the end date (e.g. +1 for day after holiday)
+      paths:
+        - "remote/path/to/video1.mp4"
+        - "remote/path/to/video2.mp4"
+        - "remote/path/to/video3.mp4"
 
 # Schedule prerolls by week of the year
 weekly:
