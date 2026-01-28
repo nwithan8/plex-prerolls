@@ -275,11 +275,11 @@ def end_of_week_number(week_number: int = None) -> datetime:
     return datetime.strptime(f"{_now.year}-W{int(week_number)}-6", "%Y-W%W-%w")
 
 
-def make_midnight(date: datetime) -> datetime:
+def make_midnight(date: Union[datetime, date]) -> datetime:
     return datetime(date.year, date.month, date.day)
 
 
-def make_right_before_midnight(date: datetime) -> datetime:
+def make_right_before_midnight(date: Union[datetime, date]) -> datetime:
     return datetime(date.year, date.month, date.day, 23, 59, 59)
 
 
