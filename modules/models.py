@@ -123,7 +123,7 @@ def schedule_entry_from_date_range(start_date_string: Optional[str],
         name = "Date Range"
 
     # If a floating holiday is specified, override schedule calculation
-    if holiday.name:
+    if holiday.name and holiday.country:
         start_date, end_date = _get_dates_for_floating_holiday(holiday=holiday)
 
         if not start_date or not end_date:

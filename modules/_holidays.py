@@ -1,5 +1,7 @@
 from datetime import datetime, date
 
+import modules.logs as logging
+
 import holidays
 from holidays import HolidayBase
 
@@ -11,16 +13,14 @@ def _get_country_from_alpha2(alpha2: str, year: int, subdivision: str = None) ->
     :param alpha2: The ISO 3166-1 alpha-2 country code.
     :param year: The year for which to retrieve holidays.
     :param subdivision: The subdivision code (e.g., state or province) if applicable.
-    :return: The HolidayBase subclass for the specified country.
-    :raises ValueError: If the country code is not found.
+    :return: The HolidayBase subclass for the specified country, or None if not found.
     """
     try:
+        subdivision = subdivision or None  # Will convert empty strings to None
         country = holidays.country_holidays(country=alpha2, years=year, subdiv=subdivision)
     except NotImplementedError:
-        country = None
-
-    if country is None:
-        raise ValueError(f"Country with alpha-2 code '{alpha2}' and subdivision '{subdivision}' not found.")
+        logging.error(f"Country with alpha-2 code '{alpha2}' and subdivision '{subdivision}' not found.")
+        return None
 
     return country
 
@@ -39,10 +39,12 @@ def get_date_from_holiday_name(country_alpha2: str,
     :param year: The year to search for the holiday. Defaults to the current year if None.
     :param country_subdivision: The subdivision code (e.g., state or province) if applicable.
     :param name_match_exact: If True, matches the holiday name exactly; otherwise, allows partial matches.
-    :return: A sorted list of dates when the holiday occurs in the specified year.
+    :return: A sorted list of dates when the holiday occurs in the specified year, or an empty list if not found.
     """
     year = year or datetime.now().year
     country_instance = _get_country_from_alpha2(alpha2=country_alpha2, year=year, subdivision=country_subdivision)
+    if not country_instance:
+        return []
 
     dates = country_instance.get_named(holiday_name=holiday_name, lookup="iexact" if name_match_exact else "icontains")
 

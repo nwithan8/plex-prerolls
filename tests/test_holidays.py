@@ -71,6 +71,7 @@ class TestHolidays(unittest.TestCase):
             )
 
         self.assertIsNone(schedule_entry)
+        # Logs should include an INFO about the holiday not being found.
 
     def test_create_schedule_entry_from_floating_holiday_invalid_country(self):
         from modules.models import schedule_entry_from_date_range
@@ -87,13 +88,14 @@ class TestHolidays(unittest.TestCase):
         weight = 10
         name = "Invalid Country Holiday Schedule"
 
-        with self.assertRaises(ValueError) as ex:
-            schedule_entry_from_date_range(
-                start_date_string=None,
-                end_date_string=None,
-                holiday=floating_holiday_config,
-                paths=paths,
-                weight=weight,
-                name=name
-            )
-        self.assertIn("Country with alpha-2 code 'XX' and subdivision 'None' not found.", str(ex.exception))
+        schedule_entry = schedule_entry_from_date_range(
+            start_date_string=None,
+            end_date_string=None,
+            holiday=floating_holiday_config,
+            paths=paths,
+            weight=weight,
+            name=name
+        )
+
+        self.assertIsNone(schedule_entry)
+        # Logs should include an ERROR about the invalid country code, and an INFO about the holiday not being found.

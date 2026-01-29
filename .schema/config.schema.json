@@ -299,7 +299,7 @@
                 "$ref": "#/definitions/endDate"
               },
               "holiday": {
-                "$ref": "#/definitions/emptyableString"
+                "$ref": "#/definitions/holiday"
               },
               "paths": {
                 "title": "Date range preroll paths",
